@@ -6,8 +6,10 @@ docker compose up --build
 
 
 Nginx (jeszcze) nie ma
-![1](images/Pasted image 20241005230756.png)
-![2](images/Pasted image 20241007183707.png)
+
+![1](images/Backend.png)
+
+![2](images/UseCase.png)
 
 API:
 ### ``/event``
@@ -67,4 +69,5 @@ If from the start, put in "-"
 
 
 przy 112 zdjęciach jednym requestem (nigdy albo tylko raz będzie tak duży) radzi sobie swietnie.
-![3](images/Pasted image 20241008224437.png)
+
+![3](images/InitPerf.png)
