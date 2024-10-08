@@ -2,3 +2,4 @@
 *.venv
 *.vs
 /src/__pycache__
+/Flask backend/random jpgs
