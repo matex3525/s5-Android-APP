@@ -61,12 +61,40 @@ If from the start, put in "-"
 		{
 			"image_id": "image_id2",
 			"b64": "b64 encoded image"
-		},
+		}
 	]
 }
 ```
 - "Event does not exist", 400
 
+### ``/album/{event_name}``
+#### PUT
+Parameter: json of which, and in what order photos to get in album.
+And of what type (PDF, DOCX, HTML)
+```json
+{
+  "album": 
+  {
+      "attributes":
+      {
+        "format": "PDF"
+      },
+      "images": 
+      [
+        {"image_id":  "image_id1"},
+        {"image_id":  "image_id2"}
+      ]
+  }
+}
+```
+**RETURNs:**
+- 200
+```
+document of specific format
+```
+
+- "Event does not exist", 400
+- "Bad request", 400
 
 przy 112 zdjęciach jednym requestem (nigdy albo tylko raz będzie tak duży) radzi sobie swietnie.
 

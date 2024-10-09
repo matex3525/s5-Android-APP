@@ -13,20 +13,6 @@ def hello():
     return "index"
 
 
-# @app.route('/hihitest/<event_name>')
-# def hihi(event_name:str):
-#     with app.test_client() as client:
-#         files = [
-#             (open(r'C:\Users\mskrzyp\Desktop\Github\e.leclerc\s5-Android-APP\Flask backend\random jpgs\first.jpg', 'rb').read(), '1'),
-#             (open(r'C:\Users\mskrzyp\Desktop\Github\e.leclerc\s5-Android-APP\Flask backend\random jpgs\second.jpg', 'rb').read(), '2')
-#         ]
-#         data = {
-#             'files': files
-#         }
-#         response = client.post('/images/'+event_name, data=data, content_type='multipart/form-data')
-#     return response
-
-
 def gen_new_event():
     new_key = "event_" + str(redis_client.incr("event_incr"))
     is_created = redis_client.sadd("event_names", new_key)
@@ -79,6 +65,43 @@ def from_images(event_name, image_id):
 @app.route('/images/<event_name>/<image_id>', methods=["GET"])
 def from_images_endpoint(event_name, image_id):
     return from_images(event_name, image_id)
+
+def handle_albums(event_name:str):
+    if not does_event_exist(event_name):
+        return "Event Does not exist", 400
+
+    data = request.json
+    if "album" not in data:
+        return "Bad request", 400
+
+    album = data["album"]
+
+    if "atrtibutes" not in album:
+        return "Bad request", 400
+
+    attributes = data["attributes"]
+    if "format" not in attributes:
+        return "Bad request", 400
+    
+    format = attributes["format"]
+
+    if "images" not in album:
+        return "Bad request", 400
+
+    images = album["images"]
+
+    for smth in images:
+        ...
+
+
+
+
+
+
+
+@app.route("/album/<event_name>", methods=["PUT"])
+def album_endpoint(event_name:str):
+    return handle_albums(event_name)
 
 
 if __name__ == "__main__":
