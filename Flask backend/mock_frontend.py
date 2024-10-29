@@ -34,12 +34,24 @@ class Commands:
         make_http_request("post","event",{})
 
     @staticmethod
+    def old(name,*args):
+        if len(args) != 2:
+            raise Exception("Syntax: old <event_name> <admin_token>")
+        make_http_request("delete",f"event/{args[0]}",{"token": args[1]})
+
+    @staticmethod
     def add(name,*args):
         if len(args) != 2:
             raise Exception("Syntax: add <event_name> <path_to_image>")
         with open(args[1],"rb") as file:
             content = base64.b64encode(file.read()).decode("utf-8")
             make_http_request("post",f"images/{args[0]}",{"b64": content})
+
+    @staticmethod
+    def rem(name,*args):
+        if len(args) != 3:
+            raise Exception("Syntax: rem <event_name> <image_id> <admin_token>")
+        make_http_request("delete",f"images/{args[0]}/{args[1]}",{"token": args[2]})
 
     @staticmethod
     def get(name,*args):
