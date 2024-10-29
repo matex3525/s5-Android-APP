@@ -81,5 +81,17 @@ def from_images_endpoint(event_name, image_id):
     return from_images(event_name, image_id)
 
 
+def delete_images(event_name, image_id):
+    if not does_event_exist(event_name):
+        return "Event does not exist", 400
+    
+    redis_client.xdel(event_name,image_id)
+
+    return jsonify(data = "Success",success = 200)
+
+@app.route('/images/<event_name>/<image_id>', methods=["DELETE"])
+def delete_images_endpoint(event_name, image_id):
+    return delete_images(event_name,image_id)
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
