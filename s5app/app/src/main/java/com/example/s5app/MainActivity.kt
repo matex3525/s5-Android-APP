@@ -1,11 +1,13 @@
 package com.example.s5app
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -28,6 +30,7 @@ import com.example.s5app.screen.MainScreen
 import com.example.s5app.ui.theme.S5appTheme
 
 class MainActivity : ComponentActivity() {
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         val pinkColor = Color(0xFFFFC0CB)
@@ -35,18 +38,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             S5appTheme {
-                Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-                    TopAppBar(
-                        title = { Text("Cupid") },
-                        colors = TopAppBarDefaults.topAppBarColors(containerColor = pinkColor)
-                    )
-                }) { innerPadding ->
-//                    Greeting(
-//                        name = "Android",
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-                    MainScreen(modifier = Modifier.padding(innerPadding))
-                }
+                Scaffold(modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Cupid") },
+                            colors = TopAppBarDefaults.topAppBarColors(containerColor = pinkColor)
+                        )
+                    },
+                    content = {
+                        MainScreen(padding = PaddingValues(horizontal = 48.dp))
+                    }
+                )
             }
         }
     }
