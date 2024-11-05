@@ -1,0 +1,6 @@
+*.idea
+*.venv
+*.vs
+/src/__pycache__
+/Flask backend/random jpgs
+/Flask backend/app/__pycache__
