@@ -1,8 +1,15 @@
 services:
+  nginx:
+    build: ./nginx
+    ports:
+      - 8080:80
+    depends_on:
+      - web
+
   web:
     build: .
-    ports:
-      - "5000:5000"
+    expose:
+      - 5000:5000
     depends_on:
       - redis
     volumes:

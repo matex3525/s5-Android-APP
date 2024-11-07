@@ -1,9 +1,16 @@
-from flask import Flask,request,jsonify
+from flask import Flask,request
 import redis
 import secrets
 
 app = Flask(__name__)
 redis_client = redis.StrictRedis(host='redis', port=6379, decode_responses=True)
+
+@app.get("/list")
+def endpoint_list_events():
+    names = []
+    for name in redis_client.sscan_iter("event_names"):
+        names.append(name)
+    return {"events": names},200
 
 @app.post("/event")
 def endpoint_event():
@@ -13,12 +20,12 @@ def endpoint_event():
     #@TODO: This should probably use a transaction.
     is_created = redis_client.sadd("event_names", new_key)
     if not is_created:
-        return {"error": "I can't tell you the cause of this error."},400
+        return {"error": "Internal error."},400
 
     is_created = redis_client.hset("tokens",new_key,admin_token)
     if not is_created:
         redis_client.srem("event_names",new_key)
-        return {"error": "I can't tell you the cause of this error."},400
+        return {"error": "Internal error."},400
 
     return {"event": new_key,"admin_token": admin_token},201
 
@@ -81,8 +88,4 @@ def endpoint_images_delete(event_name,image_id):
         return {"error": "Invalid token."},400
 
     redis_client.xdel(event_name,image_id)
-
     return {"success": 1},200
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0")
