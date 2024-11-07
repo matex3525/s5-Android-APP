@@ -21,11 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.s5app.Greeting
+import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.ui.theme.S5appTheme
 
 @Composable
-fun MainScreen(padding: PaddingValues = PaddingValues(horizontal = 48.dp)) {
+fun MainScreen(padding: PaddingValues = PaddingValues(horizontal = 48.dp), navController: NavController? = null) {
     Box(
         modifier = Modifier
             .fillMaxSize() // Fill the entire screen
@@ -51,7 +53,7 @@ fun MainScreen(padding: PaddingValues = PaddingValues(horizontal = 48.dp)) {
 //        )
                 Button(
                     onClick = {
-                    //count++
+                        navController?.navigate(AlbumScreen)
                     },
                     colors = ButtonDefaults.buttonColors( containerColor = Color(0xFFEF476F), // Background color
                         contentColor = Color.White // Text color

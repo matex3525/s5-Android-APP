@@ -26,11 +26,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.s5app.navigation.AlbumScreen
+import com.example.s5app.navigation.MainScreen
+import com.example.s5app.screen.AlbumScreen
 import com.example.s5app.screen.MainScreen
 import com.example.s5app.ui.theme.S5appTheme
 
 class MainActivity : ComponentActivity() {
-    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         val pinkColor = Color(0xFFFFC0CB)
@@ -38,6 +44,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             S5appTheme {
+                val navController = rememberNavController()
                 Scaffold(modifier = Modifier.fillMaxSize(),
                     topBar = {
                         TopAppBar(
@@ -46,7 +53,17 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     content = {
-                        MainScreen(padding = PaddingValues(horizontal = 48.dp))
+                        NavHost( navController = navController,
+                            startDestination = MainScreen,
+                            modifier = Modifier.padding(it) )
+                        {
+                            composable<MainScreen> {
+                                MainScreen(PaddingValues(horizontal = 48.dp), navController)
+                            }
+                            composable<AlbumScreen> {
+                                AlbumScreen()
+                            }
+                        }
                     }
                 )
             }
