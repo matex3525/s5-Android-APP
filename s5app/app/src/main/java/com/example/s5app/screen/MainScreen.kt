@@ -31,7 +31,7 @@ fun MainScreen(padding: PaddingValues = PaddingValues(horizontal = 48.dp), navCo
     Box(
         modifier = Modifier
             .fillMaxSize() // Fill the entire screen
-            .background(Color.White) // Set the background color to black
+            .background(Color(0xFFFFE5EC))
             .padding(padding)
 
     ) {
