@@ -31,9 +31,20 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+class AlbumScreenViewModel(): ViewModel() {
+    val images = mutableStateListOf(AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage())
+    fun addImage(imageBitmap: ImageBitmap? = null) {
+        images.add(AlbumImage(null, imageBitmap))
+    }
+}
 
 @Composable
-fun AlbumScreen() {
+fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
     Column(
         modifier = Modifier
             .background(Color(0xFFFFE5EC))
@@ -49,12 +60,10 @@ fun AlbumScreen() {
                 modifier = Modifier.fillMaxSize()
             ) {
                 item {
-                    AddImageGridCell()
+                    AddImageGridCell(vm)
                 }
-                for (i in 1..25) {
-                    item {
-                        AlbumImageGridCell()
-                    }
+                items(vm.images) {item ->
+                    AlbumImageGridCell(item)
                 }
             }
         }
@@ -77,20 +86,28 @@ fun AlbumScreen() {
 }
 
 @Composable
-fun AlbumImageGridCell() {
+fun AlbumImageGridCell(albumImage: AlbumImage? = null) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = Color(0xFFEF476F),
         modifier = Modifier
             .padding(16.dp)
             .size(100.dp)
     ) {
         // Your content here
+        albumImage?.imageBitmap?.let {
+            Image(
+                bitmap = it,
+                contentDescription = "Selected Image",
+                modifier = Modifier.fillMaxSize()
+            )
+        }
     }
 }
 
+data class AlbumImage(var id: Long? = null, var imageBitmap: ImageBitmap? = null)
+
 @Composable
-fun AddImageGridCell() {
+fun AddImageGridCell(vm: AlbumScreenViewModel) {
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -101,6 +118,7 @@ fun AddImageGridCell() {
         if (result.resultCode == Activity.RESULT_OK) {
             val bitmap = result.data?.extras?.get("data") as Bitmap
             imageBitmap = bitmap
+            vm.addImage(bitmap.asImageBitmap())
         }
     }
 
@@ -110,6 +128,7 @@ fun AddImageGridCell() {
         uri?.let {
             val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
             imageBitmap = bitmap
+            vm.addImage(bitmap.asImageBitmap())
         }
     }
 
@@ -125,18 +144,10 @@ fun AddImageGridCell() {
             contentAlignment = Alignment.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            if (imageBitmap != null) {
-                Image(
-                    bitmap = imageBitmap!!.asImageBitmap(),
-                    contentDescription = "Selected Image",
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Text(
-                    text = "Add photo",
-                    color = Color(0xFFEF476F)
-                )
-            }
+            Text(
+                text = "Add photo",
+                color = Color(0xFFEF476F)
+            )
         }
     }
 
