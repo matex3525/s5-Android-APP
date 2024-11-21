@@ -1,6 +1,5 @@
 package com.example.s5app.screen
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,13 +8,11 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.s5app.extension.dashedBorder
 import androidx.compose.foundation.layout.Column
@@ -33,10 +30,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.s5app.ui.theme.S5appTheme
 
-class AlbumScreenViewModel(): ViewModel() {
+class AlbumScreenViewModel : ViewModel() {
     val images = mutableStateListOf(AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage())
     fun addImage(imageBitmap: ImageBitmap? = null) {
         images.add(AlbumImage(null, imageBitmap))
@@ -46,14 +45,10 @@ class AlbumScreenViewModel(): ViewModel() {
 @Composable
 fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
     Column(
-        modifier = Modifier
-            .background(Color(0xFFFFE5EC))
-            .fillMaxSize()
+        modifier = Modifier.fillMaxSize()
     ) {
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .padding(16.dp)
+            modifier = Modifier.weight(1.0f).padding(16.dp)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -74,10 +69,6 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
         ) {
             Button(
                 onClick = { /* Do something */ },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFEF476F), // Background color
-                    contentColor = Color.White // Text color
-                )
             ) {
                 Text("Export album")
             }
@@ -137,7 +128,7 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
         modifier = Modifier
             .padding(16.dp)
             .size(100.dp)
-            .dashedBorder(4.dp, Color(0xFFEF476F), 16.dp)
+            .dashedBorder(4.dp,MaterialTheme.colorScheme.secondary,16.dp)
             .clickable { expanded = true }
     ) {
         Box(
@@ -146,7 +137,7 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
         ) {
             Text(
                 text = "Add photo",
-                color = Color(0xFFEF476F)
+                //color = Color(0xFFEF476F)
             )
         }
     }
@@ -157,9 +148,9 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
     ) {
         DropdownMenuItem(
             onClick = {
-            expanded = false
-            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            cameraLauncher.launch(cameraIntent)
+                expanded = false
+                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                cameraLauncher.launch(cameraIntent)
             },
             text = {
                 Text("Camera")
@@ -167,12 +158,24 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
         )
         DropdownMenuItem(
             onClick = {
-            expanded = false
-            galleryLauncher.launch("image/*")
+                expanded = false
+                galleryLauncher.launch("image/*")
             },
             text = {
                 Text("Gallery")
             }
         )
     }
+}
+
+@Preview(showBackground = true,backgroundColor = 0xFFFFFFFF)
+@Composable
+fun AlbumScreenPreviewLightMode() = S5appTheme(darkTheme = false) {
+    AlbumScreen()
+}
+
+@Preview(showBackground = true,backgroundColor = 0xFF000000)
+@Composable
+fun AlbumScreenPreviewDarkMode() = S5appTheme(darkTheme = true) {
+    AlbumScreen()
 }
