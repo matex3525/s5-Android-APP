@@ -1,73 +1,92 @@
-Aby odpalić, wymagany docker
-
-z /Flask backend wykonać:
+## Jak uruchomić serwer?
+```
 docker compose up --build
-
-
-
-Nginx (jeszcze) nie ma
-
-![1](images/Backend.png)
-
-![2](images/UseCase.png)
-
-API:
-### ``/event``
-#### POST
-Parameterless request to generate a new event - users need this name.
-
-**RETURNs:**
-- 201
-```json
-{  
-	"event:name": "newly generated event"  
-}
 ```
 
-
-### ``/images/{event_name}``
-#### POST
-Takes a json, with  .jpg encoded in b64
+## "Dokumentacja" API
+Odpowiedź z serwera zawsze jest postaci:
 ```json
-{
-	"b64": "a b64 encoded jpg"
-}
+{"success": /*0 or 1*/,"params": /*object*/}
 ```
-**RETURNs:**
-- 201
+Jeśli ``"success"`` zawiera 1, ``"params"`` zawiera dodatkowe informacje.<br>
+Jeśli ``"success"`` zawiera 0, ``"params"`` zawiera kod błędu:<br>
+> 0 - nazwa wydarzenia jest niepoprawna<br>
+1 - token admina jest niepoprawny<br>
+2 - string podany przez użytkownika jest zbyt długi<br>
+3 - string podany przez użytkownika nie przeszedł przez filtr<br>
+4 - błąd wewnętrzny
+
+### ``/event`` (POST)
+Generuje nowe wydarzenie.<br>
+#### Przyjmuje
 ```json
-{
-	"image_id": "image_id"
-}
+{"event_name": "Nazwa wydarzenia"}
 ```
+#### Zwraca
+```json
+{"success": 1,"params": {"user_token": "string","admin_token": "string"}}
+```
+#### Zwraca kody błędu: 2,3 oraz 4
 
-- "Event does not exist", 400
-- "b64 not in request", 400
+### ``/event/<user_token>`` (GET)
+Sprawdza czy wydarzenie &lt;user_token&gt; istnieje.
+#### Zwraca
+```json
+{"success": 1,"params": /*0 lub 1*/}
+```
+#### Zwraca kody błędu: 4
 
-### ``/images/{event_name}/{image_id}``
-#### GET
-Get images that are newer then specified image_id.
-If from the start, put in "-"
+### ``/event/<user_token>`` (DELETE)
+Usuwa wydarzenie &lt;user_token&gt;.
+#### Przyjmuje
+```json
+{"admin_token": "Token admina"}
+```
+#### Zwraca
+```json
+{"success": 1,"params": null}
+```
+#### Zwraca kody błędu: 0,1 oraz 4
 
-**RETURNs:**
-- 200
+### ``/images/<user_token>`` (POST)
+Dodaje obraz do wydarzenia.
+#### Przyjmuje
+```json
+{"b64": "Base64 obrazka","title": "Nazwa obrazka"}
+```
+#### Zwraca
+```json
+{"success": 1,"params": {"image_id": "ID"}}
+```
+#### Zwraca kody błędu: 0,2,3 oraz 4
+
+### ``/images/<user_token>/<image_id>`` (GET)
+Zwraca obraz o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
+Jeśli &lt;image_id&gt; = "0-0", zwraca wszystkie obrazki.
+#### Zwraca
 ```json
 {
-	"images": [
+	"success": 1,
+	"params": [
 		{
-			"image_id": "image_id1",
-			"b64": "b64 encoded image"
+			"image_id": "ID",
+			"b64": "Base64",
+			"title": "Tytuł"
 		},
-		{
-			"image_id": "image_id2",
-			"b64": "b64 encoded image"
-		},
+		/*...*/
 	]
 }
 ```
-- "Event does not exist", 400
+#### Zwraca kody błędu: 0 oraz 4
 
-
-przy 112 zdjęciach jednym requestem (nigdy albo tylko raz będzie tak duży) radzi sobie swietnie.
-
-![3](images/InitPerf.png)
+### ``/images/<user_token>/<image_id>`` (DELETE)
+Usuwa obraz o ID &lt;image_id&gt; w wydarzeniu &lt;user_token&gt;.
+#### Przyjmuje
+```json
+{"admin_token": "Token admina"}
+```
+#### Zwraca
+```json
+{"success": 1,"params": null}
+```
+#### Zwraca kody błędu: 0,1 oraz 4
