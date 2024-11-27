@@ -30,9 +30,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.s5app.dialog.AlbumImageDetailsDialog
 import com.example.s5app.ui.theme.S5appTheme
 
 class AlbumScreenViewModel : ViewModel() {
@@ -48,7 +50,9 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
         modifier = Modifier.fillMaxSize()
     ) {
         Box(
-            modifier = Modifier.weight(1.0f).padding(16.dp)
+            modifier = Modifier
+                .weight(1.0f)
+                .padding(16.dp)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -78,18 +82,32 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
 
 @Composable
 fun AlbumImageGridCell(albumImage: AlbumImage? = null) {
+    val showDetailsDialog = remember { mutableStateOf(false) }
+    when {
+        showDetailsDialog.value -> {
+            if (albumImage != null) {
+                AlbumImageDetailsDialog(albumImage) {
+                    showDetailsDialog.value = false
+                }
+            }
+        }
+    }
     Surface(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .padding(16.dp)
             .size(100.dp)
+            .clickable {
+                showDetailsDialog.value = true
+            }
     ) {
         // Your content here
         albumImage?.imageBitmap?.let {
             Image(
                 bitmap = it,
                 contentDescription = "Selected Image",
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
         }
     }
@@ -128,7 +146,7 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
         modifier = Modifier
             .padding(16.dp)
             .size(100.dp)
-            .dashedBorder(4.dp,MaterialTheme.colorScheme.secondary,16.dp)
+            .dashedBorder(4.dp, MaterialTheme.colorScheme.secondary, 16.dp)
             .clickable { expanded = true }
     ) {
         Box(
