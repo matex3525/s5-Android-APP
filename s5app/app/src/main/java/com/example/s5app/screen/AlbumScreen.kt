@@ -34,7 +34,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.s5app.dialog.AlbumImageDetailsDialog
+import androidx.navigation.NavController
+import com.example.s5app.navigation.AlbumImageDetailsScreen
 import com.example.s5app.ui.theme.S5appTheme
 
 class AlbumScreenViewModel : ViewModel() {
@@ -45,7 +46,7 @@ class AlbumScreenViewModel : ViewModel() {
 }
 
 @Composable
-fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
+fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavController? = null) {
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -62,7 +63,7 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
                     AddImageGridCell(vm)
                 }
                 items(vm.images) {item ->
-                    AlbumImageGridCell(item)
+                    AlbumImageGridCell(item, navController)
                 }
             }
         }
@@ -81,24 +82,26 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
 }
 
 @Composable
-fun AlbumImageGridCell(albumImage: AlbumImage? = null) {
-    val showDetailsDialog = remember { mutableStateOf(false) }
-    when {
-        showDetailsDialog.value -> {
-            if (albumImage != null) {
-                AlbumImageDetailsDialog(albumImage) {
-                    showDetailsDialog.value = false
-                }
-            }
-        }
-    }
+fun AlbumImageGridCell(albumImage: AlbumImage? = null, navController: NavController? = null) {
+//    val showDetailsDialog = remember { mutableStateOf(false) }
+//    when {
+//        showDetailsDialog.value -> {
+////            if (albumImage != null) {
+////                AlbumImageDetailsDialog(albumImage) {
+////                    showDetailsDialog.value = false
+////                }
+////            }
+//
+//        }
+//    }
     Surface(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .padding(16.dp)
             .size(100.dp)
             .clickable {
-                showDetailsDialog.value = true
+//                showDetailsDialog.value = true
+                navController?.navigate(AlbumImageDetailsScreen)
             }
     ) {
         // Your content here

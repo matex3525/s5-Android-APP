@@ -1,59 +1,105 @@
 package com.example.s5app.screen
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.s5app.ui.theme.S5appTheme
+import java.util.Date
 
+class AlbumImageDetailsViewModel(
+    bitmapSource: ImageBitmap?,
+    timeOfCreation: Date,
+    comments: List<String>
+) : ViewModel() {
+    var bitmapSource by mutableStateOf(bitmapSource)
+        private set
+    val timeOfCreation by mutableStateOf(timeOfCreation)
+    var comments = comments.toMutableStateList()
+        private set
+}
+
+class AlbumImageDetailsViewModelFactory(private val bitmapSource: ImageBitmap?, private val timeOfCreation: Date, private val comments: List<String>) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        return AlbumImageDetailsViewModel(bitmapSource, timeOfCreation, comments) as T
+    }
+}
 @Composable
 fun AlbumImageDetailsScreen(albumImage: AlbumImage = AlbumImage()) {
+    val vm = viewModel<AlbumImageDetailsViewModel>(
+        factory = AlbumImageDetailsViewModelFactory(
+            albumImage.imageBitmap,
+            Date(),
+            listOf(
+                "AAA",
+                "BBB",
+                "CCC"
+            )
+        )
+    )
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.TopCenter
     ) {
-        Column(
+        LazyColumn(
+            modifier = Modifier
+                .wrapContentSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(48.dp)
         ) {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.4f)
-            ) {
-                // Your content here
-                albumImage.imageBitmap?.let {
-                    Image(
-                        bitmap = it,
-                        contentDescription = "Selected Image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(300.dp)
+                ) {
+                    // Your content here
+                    albumImage.imageBitmap?.let {
+                        Image(
+                            bitmap = it,
+                            contentDescription = "Selected Image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
             }
-            Text("Photo added at:")
-            Text("Comments")
-            LazyColumn(
-                modifier = Modifier.fillMaxSize()
-            ) {
-
+            item { 
+                Spacer(modifier = Modifier.height(46.dp))
+            }
+            item {
+                Text("Photo added at:")
+            }
+            item {
+                Spacer(modifier = Modifier.height(46.dp))
+            }
+            item {
+                Text("Comments")
+            }
+            item {
+                Spacer(modifier = Modifier.height(46.dp))
             }
 //                    Row(
 //                        modifier = Modifier.fillMaxWidth(),
@@ -83,7 +129,23 @@ fun AlbumImageDetailsScreen(albumImage: AlbumImage = AlbumImage()) {
 //            }) {
 //                Text("Show comments")
 //            }
+            items(items = vm.comments) { comment ->
+                AlbumImageDetailsCommentCell(comment = comment)
+            }
         }
+    }
+}
+
+@Composable
+fun AlbumImageDetailsCommentCell(comment: String) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+            .padding(top = 8.dp),
+        shape = RectangleShape
+    ) {
+        Text(comment, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
     }
 }
 

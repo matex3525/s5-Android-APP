@@ -7,3 +7,6 @@ object MainScreen
 
 @Serializable
 object AlbumScreen
+
+@Serializable
+object AlbumImageDetailsScreen

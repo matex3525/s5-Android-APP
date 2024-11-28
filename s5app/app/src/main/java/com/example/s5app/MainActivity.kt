@@ -16,11 +16,15 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.s5app.navigation.AlbumImageDetailsScreen
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.navigation.MainScreen
+import com.example.s5app.screen.AlbumImage
+import com.example.s5app.screen.AlbumImageDetailsScreen
 import com.example.s5app.screen.AlbumScreen
 import com.example.s5app.screen.MainScreen
 import com.example.s5app.ui.theme.S5appTheme
@@ -50,7 +54,10 @@ fun MainActivityScreen(startDestination: Any) {
                 MainScreen(navController)
             }
             composable<AlbumScreen> {
-                AlbumScreen()
+                AlbumScreen(viewModel(), navController)
+            }
+            composable<AlbumImageDetailsScreen> {
+                AlbumImageDetailsScreen(AlbumImage())
             }
         }
     }
