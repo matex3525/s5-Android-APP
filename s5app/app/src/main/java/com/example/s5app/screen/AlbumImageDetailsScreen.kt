@@ -1,21 +1,28 @@
 package com.example.s5app.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
@@ -41,6 +48,10 @@ class AlbumImageDetailsViewModel(
     val timeOfCreation by mutableStateOf(timeOfCreation)
     var comments = comments.toMutableStateList()
         private set
+
+    fun addComment(comment: String) {
+        comments.add(comment)
+    }
 }
 
 class AlbumImageDetailsViewModelFactory(private val bitmapSource: ImageBitmap?, private val timeOfCreation: Date, private val comments: List<String>) : ViewModelProvider.Factory {
@@ -50,6 +61,7 @@ class AlbumImageDetailsViewModelFactory(private val bitmapSource: ImageBitmap?, 
 }
 @Composable
 fun AlbumImageDetailsScreen(albumImage: AlbumImage = AlbumImage()) {
+    var newComment by remember { mutableStateOf("") }
     val vm = viewModel<AlbumImageDetailsViewModel>(
         factory = AlbumImageDetailsViewModelFactory(
             albumImage.imageBitmap,
@@ -87,48 +99,45 @@ fun AlbumImageDetailsScreen(albumImage: AlbumImage = AlbumImage()) {
                 }
             }
             item { 
-                Spacer(modifier = Modifier.height(46.dp))
+                Spacer(modifier = Modifier.height(48.dp))
             }
             item {
                 Text("Photo added at:")
             }
             item {
-                Spacer(modifier = Modifier.height(46.dp))
+                Spacer(modifier = Modifier.height(48.dp))
             }
             item {
                 Text("Comments")
             }
             item {
-                Spacer(modifier = Modifier.height(46.dp))
+                Column (
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    TextField(
+                        modifier = Modifier.fillMaxWidth(),
+                        value = newComment,
+                        onValueChange = { newComment = it },
+                        singleLine = true,
+                        label = { Text("Add new comment") }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        modifier = Modifier.fillMaxWidth(0.5f),
+                        onClick = {
+                            vm.addComment(newComment)
+                            newComment = ""
+                        }
+                    ) {
+                        Text(text = "Add")
+                    }
+                }
             }
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.Center
-//                    ) {
-//                        TextField(
-//                            modifier = Modifier.fillMaxWidth(0.4f),
-//                            value = newComment,
-//                            onValueChange = { newComment = it },
-//                            singleLine = true,
-//                            label = { Text("Add new comment") }
-//                        )
-//                        Spacer(modifier = Modifier.width(8.dp))
-//                        Button(
-//                            modifier = Modifier.fillMaxWidth(0.5f),
-//                            onClick = {
-//                                //@TODO: Join to an event by code.
-//                                newComment = ""
-//                            }
-//                        ) {
-//                            Text(text = "Add")
-//                        }
-//                    }
-//            Button(onClick = {
-//
-//            }) {
-//                Text("Show comments")
-//            }
+            item {
+                Spacer(modifier = Modifier.height(48.dp))
+            }
             items(items = vm.comments) { comment ->
                 AlbumImageDetailsCommentCell(comment = comment)
             }
