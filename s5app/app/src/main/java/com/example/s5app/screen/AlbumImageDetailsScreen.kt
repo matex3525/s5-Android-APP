@@ -59,6 +59,7 @@ class AlbumImageDetailsViewModelFactory(private val bitmapSource: ImageBitmap?, 
         return AlbumImageDetailsViewModel(bitmapSource, timeOfCreation, comments) as T
     }
 }
+
 @Composable
 fun AlbumImageDetailsScreen(albumImage: AlbumImage = AlbumImage()) {
     var newComment by remember { mutableStateOf("") }

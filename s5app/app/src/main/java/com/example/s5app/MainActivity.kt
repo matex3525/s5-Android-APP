@@ -1,5 +1,6 @@
 package com.example.s5app
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,11 +16,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import com.example.s5app.extension.toBitmap
 import com.example.s5app.navigation.AlbumImageDetailsScreen
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.navigation.MainScreen
@@ -45,6 +50,7 @@ fun MainActivityScreen(startDestination: Any) {
             )
         }
     ) {
+        val context = LocalContext.current
         NavHost(
             navController = navController,
             startDestination = startDestination,
@@ -57,7 +63,9 @@ fun MainActivityScreen(startDestination: Any) {
                 AlbumScreen(viewModel(), navController)
             }
             composable<AlbumImageDetailsScreen> {
-                AlbumImageDetailsScreen(AlbumImage())
+                val args = it.toRoute<AlbumImageDetailsScreen>()
+                val uri = Uri.parse(args.imageByteArray)
+                AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
             }
         }
     }

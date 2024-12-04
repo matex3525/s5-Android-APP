@@ -30,11 +30,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.s5app.R
+import com.example.s5app.extension.getRawResourceUri
+import com.example.s5app.extension.toUri
 import com.example.s5app.navigation.AlbumImageDetailsScreen
 import com.example.s5app.ui.theme.S5appTheme
 
@@ -83,6 +87,7 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavContro
 
 @Composable
 fun AlbumImageGridCell(albumImage: AlbumImage? = null, navController: NavController? = null) {
+    val context = LocalContext.current
 //    val showDetailsDialog = remember { mutableStateOf(false) }
 //    when {
 //        showDetailsDialog.value -> {
@@ -101,7 +106,13 @@ fun AlbumImageGridCell(albumImage: AlbumImage? = null, navController: NavControl
             .size(100.dp)
             .clickable {
 //                showDetailsDialog.value = true
-                navController?.navigate(AlbumImageDetailsScreen)
+                if (albumImage?.imageBitmap != null) {
+                    val bitmapUri = albumImage.imageBitmap!!.asAndroidBitmap().toUri(context)
+                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray= bitmapUri.toString()))
+                } else {
+                    val bitmapUri = getRawResourceUri(context, R.raw.noimg)
+                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray= bitmapUri.toString()))
+                }
             }
     ) {
         // Your content here
