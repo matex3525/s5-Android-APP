@@ -48,6 +48,7 @@ fun S5appTheme(darkTheme: Boolean = isSystemInDarkTheme(),content: @Composable (
     content = content
 )
 
+/*
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreviewLightMode() = S5appTheme(darkTheme = false) {
@@ -59,3 +60,4 @@ fun GreetingPreviewLightMode() = S5appTheme(darkTheme = false) {
 fun GreetingPreviewDarkMode() = S5appTheme(darkTheme = true) {
     MainActivityScreen(MainScreen)
 }
+*/

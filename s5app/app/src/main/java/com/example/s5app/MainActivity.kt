@@ -16,19 +16,26 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.s5app.navigation.AlbumScreen
+import com.example.s5app.navigation.EventImagesScreen
+import com.example.s5app.navigation.EventMainPageScreen
 import com.example.s5app.navigation.MainScreen
-import com.example.s5app.screen.AlbumScreen
+import com.example.s5app.navigation.NewEventScreen
+import com.example.s5app.screen.EventMainPageScreen
 import com.example.s5app.screen.MainScreen
+import com.example.s5app.screen.NewEventScreen
+import com.example.s5app.screen.EventImagesScreen
 import com.example.s5app.ui.theme.S5appTheme
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun MainActivityScreen(startDestination: Any) {
     val navController = rememberNavController()
+    val viewModelStoreOwner = checkNotNull(LocalViewModelStoreOwner.current) { "LocalViewModelStoreOwner.current == null" }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -47,10 +54,19 @@ fun MainActivityScreen(startDestination: Any) {
             modifier = Modifier.padding(it)
         ) {
             composable<MainScreen> {
-                MainScreen(navController)
+                MainScreen(navController,viewModel(viewModelStoreOwner))
             }
-            composable<AlbumScreen> {
+            composable<NewEventScreen> {
+                NewEventScreen(navController,viewModel(viewModelStoreOwner))
+            }
+            /*composable<AlbumScreen> {
                 AlbumScreen()
+            }*/
+            composable<EventMainPageScreen> {
+                EventMainPageScreen(navController,viewModel(viewModelStoreOwner))
+            }
+            composable<EventImagesScreen> {
+                EventImagesScreen(navController,viewModel(viewModelStoreOwner))
             }
         }
     }

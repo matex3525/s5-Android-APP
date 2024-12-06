@@ -7,3 +7,12 @@ object MainScreen
 
 @Serializable
 object AlbumScreen
+
+@Serializable
+object NewEventScreen
+
+@Serializable
+object EventMainPageScreen
+
+@Serializable
+object EventImagesScreen

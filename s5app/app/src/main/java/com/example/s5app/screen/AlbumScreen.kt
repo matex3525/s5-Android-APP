@@ -1,5 +1,6 @@
 package com.example.s5app.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -28,12 +29,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.s5app.MainActivityScreen
+import com.example.s5app.MainViewModel
 import com.example.s5app.ui.theme.S5appTheme
+import com.example.s5app.navigation.AlbumScreen
+import com.example.s5app.navigation.MainScreen
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 class AlbumScreenViewModel : ViewModel() {
     val images = mutableStateListOf(AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage())
@@ -48,7 +62,9 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel()) {
         modifier = Modifier.fillMaxSize()
     ) {
         Box(
-            modifier = Modifier.weight(1.0f).padding(16.dp)
+            modifier = Modifier
+                .weight(1.0f)
+                .padding(16.dp)
         ) {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
@@ -128,7 +144,7 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
         modifier = Modifier
             .padding(16.dp)
             .size(100.dp)
-            .dashedBorder(4.dp,MaterialTheme.colorScheme.secondary,16.dp)
+            .dashedBorder(4.dp, MaterialTheme.colorScheme.secondary, 16.dp)
             .clickable { expanded = true }
     ) {
         Box(
