@@ -1,21 +1,23 @@
+import sys
 import redis
 import secrets
 import werkzeug
-from enum import Enum
+import werkzeug.exceptions
 from flask import Flask,request
 
-class ErrorCode(Enum):
-    IncorrectUserToken = 0
-    IncorrectAdminToken = 1
-    StringTooLong = 2
-    StringFailedFiltering = 3
-    InternalError = 4
+ErrorCodeIncorrectUserToken = 0
+ErrorCodeIncorrectAdminToken = 1
+ErrorCodeStringTooLong = 2
+ErrorCodeStringFailedFiltering = 3
+ErrorCodeInternalError = 4
+ErrorCodeImageWidthInvalid = 5
+ErrorCodeImageHeightInvalid = 6
 
 def success(value):
-    return {"success": 1,"params": value},200
+    return {"success": True,"params": value},200
 
 def error(code: int):
-    return {"success": 0,"params": code},200
+    return {"success": False,"params": code},200
 
 app = Flask(__name__)
 database = redis.StrictRedis(host = "redis",port = 6379,decode_responses = True)
@@ -26,33 +28,51 @@ def filter_user_string(string: str) -> bool:
 
 #@TODO: This should log to a file.
 def log_endpoint_error(string: str):
-    print(string)
+    print(string,file = sys.stderr)
 
 def does_event_exist(user_token: str) -> bool:
-    return database.sismember("user_tokens",user_token)
+    return database.sismember("user_tokens",user_token) == 1
 
 def is_admin_token_valid(user_token: str,admin_token: str) -> bool:
     return database.hget("admin_tokens",user_token) == admin_token
 
 @app.errorhandler(werkzeug.exceptions.InternalServerError)
-def handle_bad_request(error):
+def handle_internal_server_error(error):
     log_endpoint_error(str(error))
-    return {"success": 0,"params": ErrorCode.InternalError},500
+    return {"success": False,"params": ErrorCodeInternalError},500
+
+@app.errorhandler(werkzeug.exceptions.NotFound)
+def handle_not_found_error(error):
+    log_endpoint_error(str(error))
+    return {"success": False,"params": ErrorCodeInternalError},404
 
 @app.get("/event/<user_token>")
-def endpoint_event_check_if_exists(user_token: str):
-    return success(1 if does_event_exist(user_token) else 0)
+def endpoint_event_check(user_token: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCodeIncorrectUserToken)
+    return success({"event_name": database.hget("event_names",user_token)})
+
+@app.post("/auth/<user_token>")
+def endpoint_auth_event(user_token: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCodeIncorrectUserToken)
+    if "admin_token" in request.json:
+        admin_token = str(request.json["admin_token"])
+        if admin_token != "":
+            if not is_admin_token_valid(user_token,admin_token):
+                return error(ErrorCodeIncorrectAdminToken)
+    return success({})
 
 @app.post("/event")
 def endpoint_event():
     if "event_name" not in request.json:
-        return error(ErrorCode.InternalError)
-    event_name: str = request.json["event_name"]
+        return error(ErrorCodeInternalError)
+    event_name = str(request.json["event_name"])
     if len(event_name) > 100:
-        return error(ErrorCode.StringTooLong)
+        return error(ErrorCodeStringTooLong)
     if not filter_user_string(event_name):
-        return error(ErrorCode.StringFailedFiltering)
-    
+        return error(ErrorCodeStringFailedFiltering)
+
     user_token = "event_" + str(database.incr("user_token_increment"))
     admin_token = secrets.token_hex(3)
 
@@ -65,13 +85,14 @@ def endpoint_event():
 
 @app.delete("/event/<user_token>")
 def endpoint_event_delete(user_token: str):
+    print(str(request.json))
     if "admin_token" not in request.json:
-        return error(ErrorCode.InternalError)
+        return error(ErrorCodeInternalError)
     if not does_event_exist(user_token):
-        return error(ErrorCode.IncorrectUserToken)
-    admin_token = request.json["admin_token"]
+        return error(ErrorCodeIncorrectUserToken)
+    admin_token = str(request.json["admin_token"])
     if not is_admin_token_valid(user_token,admin_token):
-        return error(ErrorCode.IncorrectAdminToken)
+        return error(ErrorCodeIncorrectAdminToken)
 
     transaction = database.pipeline()
     transaction.xtrim(user_token,minid = "0-0")
@@ -79,45 +100,78 @@ def endpoint_event_delete(user_token: str):
     transaction.hdel("admin_tokens",user_token)
     transaction.srem("user_tokens",user_token)
     transaction.execute(raise_on_error = True)
-    return success(None)
+    return success({})
+
+@app.get("/getimagecount/<user_token>")
+def endpoint_get_image_count(user_token: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCodeIncorrectUserToken)
+    return success(database.xlen(user_token))
 
 @app.post("/images/<user_token>")
 def endpoint_images_add(user_token: str):
-    if "b64" not in request.json:
-        return error(ErrorCode.InternalError)
     if not does_event_exist(user_token):
-        return error(ErrorCode.IncorrectUserToken)
+        return error(ErrorCodeIncorrectUserToken)
+
+    width = 0
+    height = 0
+    if "width" not in request.json:
+        return error(ErrorCodeInternalError)
+    if "height" not in request.json:
+        return error(ErrorCodeInternalError)
+
+    try:
+        width = int(request.json["width"])
+    except ValueError:
+        return error(ErrorCodeImageWidthInvalid)
+    if width < 0 or width >= 16384:
+        return error(ErrorCodeImageWidthInvalid)
+    try:
+        height = int(request.json["height"])
+    except ValueError:
+        return error(ErrorCodeImageHeightInvalid)
+    if height < 0 or height >= 16384:
+        return error(ErrorCodeImageHeightInvalid)
+
+    if "pixels" not in request.json:
+        return error(ErrorCodeInternalError)
+    pixels = str(request.json["pixels"])
 
     title = ""
     if "title" in request.json:
-        title = request.json["title"]
+        title = str(request.json["title"])
         if len(title) > 100:
-            return error(ErrorCode.StringTooLong)
+            return error(ErrorCodeStringTooLong)
         if not filter_user_string(title):
-            return error(ErrorCode.StringFailedFiltering)
+            return error(ErrorCodeStringFailedFiltering)
 
-    image_id = database.xadd(user_token,{"b64": request.json["b64"],"title": title})
+    image_id = database.xadd(user_token,{
+        "width": width,
+        "height": height,
+        "pixels": pixels,
+        "title": title
+    })
     return success({"image_id": image_id})
 
 @app.delete("/images/<user_token>/<image_id>")
 def endpoint_images_delete(user_token: str,image_id: str):
     if "admin_token" not in request.json:
-        return error(ErrorCode.InternalError)
+        return error(ErrorCodeInternalError)
     if not does_event_exist(user_token):
-        return error(ErrorCode.IncorrectUserToken)
-    
-    admin_token = request.json["admin_token"]
+        return error(ErrorCodeIncorrectUserToken)
+
+    admin_token = str(request.json["admin_token"])
     if not is_admin_token_valid(user_token,admin_token):
-        return error(ErrorCode.IncorrectAdminToken)
+        return error(ErrorCodeIncorrectAdminToken)
 
     database.xdel(user_token,image_id)
-    return success(None)
+    return success({})
 
 @app.get("/images/<user_token>/<image_id>")
 def endpoint_images_get(user_token: str,image_id: str):
     if not does_event_exist(user_token):
-        return error(ErrorCode.IncorrectUserToken)
-    
+        return error(ErrorCodeIncorrectUserToken)
+
     stream = database.xrange(user_token,image_id,"+")
     data = []
     for identifier,attributes in stream:
