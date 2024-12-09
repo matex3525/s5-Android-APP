@@ -3,22 +3,24 @@
 docker compose up --build
 ```
 
-## "Dokumentacja" API
+## Dokumentacja API
 Odpowiedź z serwera zawsze jest postaci:
 ```json
-{"success": /*false or true*/,"params": /*object*/}
+{"success": /*true lub false*/,"params": /*jakieś dane*/}
 ```
-Jeśli ``"success"`` = true, ``"params"`` zawiera dodatkowe informacje.<br>
+Jeśli ``"success"`` = true, ``"params"`` zawiera dodatkowe informacje związwne z zapytaniem.<br>
 Jeśli ``"success"`` = false, ``"params"`` zawiera kod błędu:<br>
-> 0 - nazwa wydarzenia jest niepoprawna<br>
-1 - token admina jest niepoprawny<br>
-2 - string podany przez użytkownika jest zbyt długi<br>
-3 - string podany przez użytkownika nie przeszedł przez filtr<br>
-4 - błąd wewnętrzny<br>
-5 - Niepoprawna szerokość obrazka<br>
+<pre style="font-family: inherit">
+0 - nazwa wydarzenia jest niepoprawna
+1 - token admina jest niepoprawny
+2 - string podany przez użytkownika jest zbyt długi
+3 - string podany przez użytkownika nie przeszedł przez filtr (zawierał nieodpowiedni język lub zawierał treści, które przy wyświetleniu powodowały by problemy)
+4 - błąd wewnętrzny (serwer rzucił wyjątkiem podczas obsługi żądania, niepoprawny format zapytania, próba odwołania się do nieistniejącego zasobu lub inny błąd)
+5 - Niepoprawna szerokość obrazka
 6 - Niepoprawna wysokość obrazka
+</pre>
 
-### ``/event`` (POST)
+### ``/v0/event`` (POST)
 Generuje nowe wydarzenie.<br>
 #### Przyjmuje
 ```json
@@ -28,89 +30,169 @@ Generuje nowe wydarzenie.<br>
 ```json
 {"success": true,"params": {"user_token": "string","admin_token": "string"}}
 ```
-#### Zwraca kody błędu: 2,3 oraz 4
 
-### ``/event/<user_token>`` (GET)
-Sprawdza czy wydarzenie &lt;user_token&gt; istnieje.
-#### Zwraca
-```json
-{"success": true,"params": {"event_name": "nazwa"}}
-```
-#### Zwraca kody błędu: 0 oraz 4.
-
-### ``/event/<user_token>`` (DELETE)
+### ``/v0/event/<user_token>`` (DELETE)
 Usuwa wydarzenie &lt;user_token&gt;.
 #### Przyjmuje
 ```json
-{"admin_token": "Token admina"}
+{"admin_token": "token admina"}
 ```
 #### Zwraca
 ```json
 {"success": true,"params": {}}
 ```
-#### Zwraca kody błędu: 0,1 oraz 4
 
-### ``/auth/<user_token>`` (POST)
-Sprawdza czy wydarzenie istnieje oraz sprawdza też poprawność tokenu admina.
-#### Przyjmuje (opcjonalnie)
-```json
-{"admin_token": "Token admina"}
-```
+### ``/v0/event/<user_token>`` (GET)
+Zwraca informacje o wydarzeniu &lt;user_token&gt;.
 #### Zwraca
 ```json
-{"success": true,"params": {}}
+{"success": true,"params": {"event_name": "nazwa wydarzenia"}}
 ```
-#### Zwraca kody błędu: 0 oraz 1.
 
-### ``/images/<user_token>`` (POST)
-Dodaje obraz do wydarzenia.
+### ``/v0/event/<user_token>/check`` (POST)
+Sprawdza poprawność tokenu admina dla wydarzenia &lt;user_token&gt;.
 #### Przyjmuje
 ```json
-{"width": /*szerokość*/,"height": /*długość*/,"pixels": "piksele","title": "Nazwa obrazka"}
+{"admin_token": "token admina"}
 ```
 #### Zwraca
 ```json
-{"success": true,"params": {"image_id": "ID"}}
+{"success": true,"params": {}}
 ```
-#### Zwraca kody błędu: 0,2,3,4,5 oraz 6.
 
-### ``/images/<user_token>/<image_id>`` (GET)
-Zwraca obraz o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
-Jeśli &lt;image_id&gt; = "0-0", zwraca wszystkie obrazki.
+### ``/v0/event/<user_token>/imagecount`` (GET)
+Zwraca ilość zdjęć przypisanych do wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{"success": true,"params": /*ilość zdjęć*/}
+```
+
+### ``/v0/event/<user_token>/imageids/<first_index>/<last_index>`` (GET)
+Zwraca ID zdjęć przypisanych do wydarzenia &lt;user_token&gt; o indeksach od &lt;first_index&gt; do &lt;last_index&gt; (włącznie).
+#### Zwraca
+```json
+{"success": true,"params": ["ID0","ID1",/*...*/]}
+```
+
+### ``/v0/event/<user_token>/image`` (POST)
+Dodaj zdjęcie do wydarzenia &lt;user_token&gt;.
+#### Przyjmuje
+```json
+{
+	"width": /*szerokość zdjęcia w pikselach*/,
+	"height": /*wysokość zdjęcia w pikselach*/,
+	"description": "opis zdjęcia",
+	"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64"
+}
+```
+#### Zwraca
+```json
+{"success": true,"params": {"image_id": "ID zdjęcia"}}
+```
+
+### ``/v0/event/<user_token>/image/byid/<image_id>`` (DELETE)
+Usuwa zdjęcie o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Przyjmuje
+```json
+{"admin_token": "token admina"}
+```
+#### Zwraca
+```json
+{"success": true,"params": {}}
+```
+
+### ``/v0/event/<user_token>/image/byindex/<image_index>`` (GET)
+Zwraca dane zdjęcia o indeksie &lt;image_index&gt; z wydarzenia &lt;user_token&gt;.
 #### Zwraca
 ```json
 {
 	"success": true,
-	"params": [
-		{
-			"image_id": "ID",
-			"width": /*szerokość*/,
-			"height": /*długość*/,
-			"pixels": "piksele",
-			"title": "Tytuł"
-		},
-		/*...*/
-	]
+	"params": [{
+		"image_id": "ID zdjęcia",
+		"width": /*szerokość zdjęcia w pikselach*/,
+		"height": /*wysokość zdjęcia w pikselach*/,
+		"description": "opis zdjęcia",
+		"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64"
+	}]
 }
 ```
-#### Zwraca kody błędu: 0 oraz 4
 
-### ``/getimagecount/<user_token>`` (GET)
-Zwraca ilość obrazów z wydarzenia &lt;user_token&gt;.
+### ``/v0/event/<user_token>/image/byid/<image_id>`` (GET)
+Zwraca dane zdjęcia o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
 #### Zwraca
 ```json
-{"success": true,"params": /*ilość*/}
+{
+	"success": true,
+	"params": [{
+		"image_id": "ID zdjęcia",
+		"width": /*szerokość zdjęcia w pikselach*/,
+		"height": /*wysokość zdjęcia w pikselach*/,
+		"description": "opis zdjęcia",
+		"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64"
+	}]
+}
 ```
-#### Zwraca kody błędu: 0 oraz 4
 
-### ``/images/<user_token>/<image_id>`` (DELETE)
-Usuwa obraz o ID &lt;image_id&gt; w wydarzeniu &lt;user_token&gt;.
+### ``/v0/event/<user_token>/image/byid/<image_id>/comment`` (POST)
+Dodaj komentarz do zdjęcia o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
 #### Przyjmuje
 ```json
-{"admin_token": "Token admina"}
+{"text": "Treść komentarza"}
+```
+#### Zwraca
+```json
+{"success": true,"params": {"comment_id": "ID komentarza"}}
+```
+
+### ``/v0/event/<user_token>/image/byid/<image_id>/commentcount`` (GET)
+Zwraca ilość komentarzy przypisanych dp zdjęcia o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{"success": true,"params": /*ilość komentarzy*/}
+```
+
+### ``/v0/event/<user_token>/image/byid/<image_id>/commentids/<first_index>/<last_index>`` (GET)
+Zwraca ID komentarzy przypisanych do zdjęcia o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt; o indeksach od &lt;first_index&gt; do &lt;last_index&gt; (włącznie).
+#### Zwraca
+```json
+{"success": true,"params": ["ID0","ID1",/*...*/]}
+```
+
+### ``/v0/event/<user_token>/image/byid/<image_id>/comment/byid/<comment_id>`` (DELETE)
+Usuwa komentarz o ID &lt;comment_id&gt; przypisany do zdjęcia &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Przyjmuje
+```json
+{"admin_token": "token admina"}
 ```
 #### Zwraca
 ```json
 {"success": true,"params": {}}
 ```
-#### Zwraca kody błędu: 0,1 oraz 4
+
+### ``/v0/event/<user_token>/image/byid/<image_id>/comment/byindex/<comment_index>`` (GET)
+Zwraca dane komentarza o indeksie &lt;comment_index&gt; przypisanego do zdjęcia &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"comment_id": "ID komentarza",
+		"text": "Treść komentarza",
+		"time": /*Czas dodania komentarza w nanosekundach od 1 stycznia 1970 r.*/
+	}]
+}
+```
+
+### ``/v0/event/<user_token>/image/byid/<image_id>/comment/byid/<comment_id>`` (GET)
+Zwraca dane komentarza o ID &lt;comment_id&gt; przypisanego do zdjęcia &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"comment_id": "ID komentarza",
+		"text": "Treść komentarza",
+		"time": /*Czas dodania komentarza w nanosekundach od 1 stycznia 1970 r.*/
+	}]
+}
+```
