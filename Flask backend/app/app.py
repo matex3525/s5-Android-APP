@@ -252,7 +252,7 @@ def endpoint_get_image_comment_count(user_token: str,image_id: str):
     return success(database.llen(image_comment_id_list_name(user_token,image_id)))
 
 @app.get("/v0/event/<user_token>/image/byid/<image_id>/commentids/<first_index>/<last_index>")
-def endpoint_get_image_ids(user_token: str,image_id: str,first_index: str,last_index: str):
+def endpoint_get_image_comment_ids(user_token: str,image_id: str,first_index: str,last_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
     first_index = int(first_index)
