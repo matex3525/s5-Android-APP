@@ -14,6 +14,8 @@ class ErrorCode:
     InternalError = 4
     ImageWidthInvalid = 5
     ImageHeightInvalid = 6
+    InvalidImageIndex = 7
+    InvalidCommentIndex = 8
 
 def success(value):
     return {"success": True,"params": value},200
@@ -206,7 +208,10 @@ def endpoint_delete_image(user_token: str,image_id: str):
 def endpoint_get_image_by_index(user_token: str,image_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-    image_id = str(database.lindex(image_id_list_name(user_token),image_index))
+    tmp = database.lindex(image_id_list_name(user_token),image_index)
+    if tmp is None:
+        return error(ErrorCode.InvalidImageIndex)
+    image_id = str(tmp)
     return endpoint_get_image_by_id(user_token,image_id)
 
 @app.get("/v0/event/<user_token>/image/byid/<image_id>")
@@ -282,7 +287,10 @@ def endpoint_delete_comment_by_id(user_token: str,image_id: str,comment_id: str)
 def endpoint_get_image_comment_by_index(user_token: str,image_id: str,comment_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-    comment_id = str(database.lindex(image_comment_id_list_name(user_token,image_id),comment_index))
+    tmp = database.lindex(image_comment_id_list_name(user_token,image_id),comment_index)
+    if tmp is None:
+        return error(ErrorCode.InvalidCommentIndex)
+    comment_id = str(tmp)
     return endpoint_get_image_comment_by_id(user_token,image_id,comment_id)
 
 @app.get("/v0/event/<user_token>/image/byid/<image_id>/comment/byid/<comment_id>")
