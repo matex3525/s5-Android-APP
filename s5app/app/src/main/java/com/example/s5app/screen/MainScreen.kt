@@ -31,12 +31,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.ui.theme.S5appTheme
+import com.example.s5app.viewmodel.MainScreenViewModel
 
 @Composable
-fun MainScreen(navController: NavController? = null) {
+fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavController? = null) {
     var joinCodeText by remember { mutableStateOf("") }
     var isAlbumListEmpty by remember { mutableStateOf(true) }
     LazyColumn(
@@ -94,6 +96,7 @@ fun MainScreen(navController: NavController? = null) {
                                     //@TODO: Create a new event.
                                     //navController?.navigate(AlbumScreen)
                                     isAlbumListEmpty = false
+                                    vm.createEvent("test event")
                                 }
                             ) {
                                 Text(text = "Create your first album")

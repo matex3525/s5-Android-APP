@@ -57,7 +57,7 @@ fun MainActivityScreen(startDestination: Any) {
             modifier = Modifier.padding(it)
         ) {
             composable<MainScreen> {
-                MainScreen(navController)
+                MainScreen(viewModel(), navController)
             }
             composable<AlbumScreen> {
                 AlbumScreen(viewModel(), navController)
