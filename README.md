@@ -18,6 +18,8 @@ Jeśli ``"success"`` = false, ``"params"`` zawiera kod błędu:<br>
 4 - błąd wewnętrzny (serwer rzucił wyjątkiem podczas obsługi żądania, niepoprawny format zapytania, próba odwołania się do nieistniejącego zasobu lub inny błąd)
 5 - Niepoprawna szerokość obrazka
 6 - Niepoprawna wysokość obrazka
+7 - Niepoprawny indeks obrazka
+8 - Niepoprawny indeks komentarza
 </pre>
 
 ### ``/v0/event`` (POST)
