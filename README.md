@@ -194,7 +194,7 @@ Zwraca dane komentarza o ID &lt;comment_id&gt; przypisanego do zdjęcia &lt;imag
 	"params": [{
 		"comment_id": "ID komentarza",
 		"text": "Treść komentarza",
-		"time": /*Czas dodania komentarza w nanosekundach od 1 stycznia 1970 r.*/
+		"time": /*Czas dodania komentarza w milisekundach od 1 stycznia 1970 r.*/
 	}]
 }
 ```
