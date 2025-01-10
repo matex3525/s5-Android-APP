@@ -59,7 +59,7 @@ Sprawdza poprawność tokenu admina dla wydarzenia &lt;user_token&gt;.
 ```
 #### Zwraca
 ```json
-{"success": true,"params": {}}
+{"success": true,"params": {"event_name": "nazwa wydarzenia"}}
 ```
 
 ### ``/v0/event/<user_token>/imagecount`` (GET)

@@ -124,7 +124,7 @@ def endpoint_check_admin_token(user_token: str):
     admin_token = str(request.json["admin_token"])
     if not is_admin_token_valid(user_token,admin_token):
         return error(ErrorCode.IncorrectAdminToken)
-    return success({})
+    return success({"event_name": database.hget("event_names",user_token)})
 
 ################################################################
 #                     ENDPOINTS (IMAGES)                       #
