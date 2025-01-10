@@ -243,12 +243,13 @@ def endpoint_add_comment(user_token: str,image_id: str):
     if not filter_user_string(text):
         return error(ErrorCode.StringFailedFiltering)
 
+    commentTime = time.time_ns() // 1000000
     comment_id = database.xadd(image_comment_stream_name(user_token,image_id),{
         "text": text,
-        "time": time.time_ns()
+        "time": commentTime
     })
     database.lpush(image_comment_id_list_name(user_token,image_id),comment_id)
-    return success({"comment_id": comment_id})
+    return success({"comment_id": comment_id,"time": commentTime})
 
 @app.get("/v0/event/<user_token>/image/byid/<image_id>/commentcount")
 def endpoint_get_image_comment_count(user_token: str,image_id: str):
