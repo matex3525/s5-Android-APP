@@ -143,7 +143,7 @@ Dodaj komentarz do zdjęcia o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt
 ```
 #### Zwraca
 ```json
-{"success": true,"params": {"comment_id": "ID komentarza"}}
+{"success": true,"params": {"comment_id": "ID komentarza","time": /*Czas dodania komentarza w milisekundach od 1 stycznia 1970 r.*/}}
 ```
 
 ### ``/v0/event/<user_token>/image/byid/<image_id>/commentcount`` (GET)
@@ -180,7 +180,7 @@ Zwraca dane komentarza o indeksie &lt;comment_index&gt; przypisanego do zdjęcia
 	"params": [{
 		"comment_id": "ID komentarza",
 		"text": "Treść komentarza",
-		"time": /*Czas dodania komentarza w nanosekundach od 1 stycznia 1970 r.*/
+		"time": /*Czas dodania komentarza w milisekundach od 1 stycznia 1970 r.*/
 	}]
 }
 ```
