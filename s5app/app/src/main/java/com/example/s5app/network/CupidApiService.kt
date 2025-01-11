@@ -4,9 +4,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
+import kotlinx.serialization.Serializable
 
-private const val IP: String = "192.168.0.224"
-private const val BASE_URL = "http://$IP:8080"
+private const val BASE_URL =
+    "http://10.0.2.2:8080"
 
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(GsonConverterFactory.create())
@@ -15,7 +16,7 @@ private val retrofit = Retrofit.Builder()
 
 interface CupidApiService {
     @POST("/v0/event")
-    suspend fun createEvent(@Body request: CreateEventRequest): CreateEventResponse
+    suspend fun createEvent(@Body request: CreateEventRequest): ApiResponse<CreateEventParams>
 }
 
 object CupidApi {
@@ -29,3 +30,9 @@ sealed class ApiResult<out T> {
     data class Error(val code: Int, val message: String? = null) : ApiResult<Nothing>()
     object Loading : ApiResult<Nothing>()
 }
+
+@Serializable
+data class ApiResponse<T>(
+    val success: Boolean,
+    val params: T
+)

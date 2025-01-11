@@ -28,10 +28,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,10 +59,56 @@ class AlbumScreenViewModel : ViewModel() {
 }
 
 @Composable
-fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavController? = null) {
+fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavController? = null, userToken: String, eventName: String) {
+    var isUserTokenHidden by remember { mutableStateOf(true) }
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .wrapContentWidth()
+                .wrapContentHeight()
+                .align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = "Event name: $eventName",
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(16.dp),
+                maxLines = 1
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        if (isUserTokenHidden) {
+            Box(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally)
+            ) {
+                Button(
+                    onClick = { isUserTokenHidden = false },
+                ) {
+                    Text("Show user token")
+                }
+            }
+        } else {
+            Row(modifier = Modifier
+                .padding(16.dp)
+                .align(Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "User token: $userToken")
+                Spacer(modifier = Modifier.width(16.dp))
+                Button(
+                    onClick = { isUserTokenHidden = true },
+                ) {
+                    Text("Hide user token")
+                }
+            }
+        }
         Box(
             modifier = Modifier
                 .weight(1.0f)
@@ -63,6 +118,7 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavContro
                 columns = GridCells.Fixed(3),
                 modifier = Modifier.fillMaxSize()
             ) {
+
                 item {
                     AddImageGridCell(vm)
                 }
@@ -107,11 +163,13 @@ fun AlbumImageGridCell(albumImage: AlbumImage? = null, navController: NavControl
             .clickable {
 //                showDetailsDialog.value = true
                 if (albumImage?.imageBitmap != null) {
-                    val bitmapUri = albumImage.imageBitmap!!.asAndroidBitmap().toUri(context)
-                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray= bitmapUri.toString()))
+                    val bitmapUri = albumImage.imageBitmap!!
+                        .asAndroidBitmap()
+                        .toUri(context)
+                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
                 } else {
                     val bitmapUri = getRawResourceUri(context, R.raw.noimg)
-                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray= bitmapUri.toString()))
+                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
                 }
             }
     ) {
@@ -203,11 +261,11 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
 @Preview(showBackground = true,backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AlbumScreenPreviewLightMode() = S5appTheme(darkTheme = false) {
-    AlbumScreen()
+    AlbumScreen(viewModel(), null, "event_0", "Test event")
 }
 
 @Preview(showBackground = true,backgroundColor = 0xFF000000)
 @Composable
 fun AlbumScreenPreviewDarkMode() = S5appTheme(darkTheme = true) {
-    AlbumScreen()
+    AlbumScreen(viewModel(), null, "event_0", "Test event")
 }

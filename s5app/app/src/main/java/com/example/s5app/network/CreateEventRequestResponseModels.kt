@@ -7,11 +7,7 @@ data class CreateEventRequest(
     val eventName: String
 )
 
-data class CreateEventResponse(
-    val success: Boolean,
-    val params: Params
-)
-data class Params(
+data class CreateEventParams(
     @SerializedName("user_token")
     val userToken: String,
     @SerializedName("admin_token")

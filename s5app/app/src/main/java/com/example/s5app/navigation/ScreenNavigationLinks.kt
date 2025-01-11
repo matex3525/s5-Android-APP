@@ -1,13 +1,15 @@
 package com.example.s5app.navigation
 
-import androidx.compose.ui.graphics.ImageBitmap
 import kotlinx.serialization.Serializable
 
 @Serializable
 object MainScreen
 
 @Serializable
-object AlbumScreen
+data class AlbumScreen(
+    val userToken: String,
+    val eventName: String
+)
 
 @Serializable
 data class AlbumImageDetailsScreen(

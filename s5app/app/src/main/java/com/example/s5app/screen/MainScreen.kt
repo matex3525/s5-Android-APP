@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,11 +37,14 @@ import androidx.navigation.NavController
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.viewmodel.MainScreenViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavController? = null) {
     var joinCodeText by remember { mutableStateOf("") }
+    var eventNameText by remember { mutableStateOf("") }
     var isAlbumListEmpty by remember { mutableStateOf(true) }
+    val coroutineScopeMainScreen = rememberCoroutineScope()
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = if (isAlbumListEmpty) Arrangement.Center else Arrangement.Top,
@@ -56,7 +60,7 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
             ) {
                 Surface(
                     modifier = Modifier
-                        .height(200.dp)
+                        .height(250.dp)
                         .fillMaxWidth(fraction = 0.9f)
                         .align(Alignment.Center),
                     shape = RoundedCornerShape(24.dp)
@@ -90,13 +94,16 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
                             }
                         }
                         Text(text = "or")
+                        TextField(value = eventNameText, onValueChange = { eventNameText = it }, label = { Text("Event name")})
                         if (isAlbumListEmpty) {
                             Button(
                                 onClick = {
-                                    //@TODO: Create a new event.
-                                    //navController?.navigate(AlbumScreen)
-                                    isAlbumListEmpty = false
-                                    vm.createEvent("test event")
+                                    coroutineScopeMainScreen.launch {
+                                        val response = vm.createEvent(eventNameText)
+                                        if (response != null) {
+                                            navController?.navigate(AlbumScreen(response.userToken, eventNameText))
+                                        }
+                                    }
                                 }
                             ) {
                                 Text(text = "Create your first album")
@@ -106,7 +113,7 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
                                 onClick = {
                                     //@TODO: Create a new event.
                                     //navController?.navigate(AlbumScreen)
-                                    isAlbumListEmpty = false
+                                    //isAlbumListEmpty = false
                                 }
                             ) {
                                 Text(text = "Create album")
