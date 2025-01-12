@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,6 +16,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -32,7 +36,9 @@ import com.example.s5app.screen.AlbumImage
 import com.example.s5app.screen.AlbumImageDetailsScreen
 import com.example.s5app.screen.AlbumScreen
 import com.example.s5app.screen.MainScreen
+import com.example.s5app.screen.NoInternetConnectionScreen
 import com.example.s5app.ui.theme.S5appTheme
+import com.example.s5app.viewmodel.ConnectivityViewModel
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,23 +57,29 @@ fun MainActivityScreen(startDestination: Any) {
         }
     ) {
         val context = LocalContext.current
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(it)
-        ) {
-            composable<MainScreen> {
-                MainScreen(viewModel(), navController)
+        val viewModel: ConnectivityViewModel = viewModel()
+        val isInternetAvailable by viewModel.isInternetAvailable.collectAsState(initial = true)
+        if (isInternetAvailable) {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                modifier = Modifier.padding(it)
+            ) {
+                composable<MainScreen> {
+                    MainScreen(viewModel(), navController)
+                }
+                composable<AlbumScreen> {
+                    val args = it.toRoute<AlbumScreen>()
+                    AlbumScreen(viewModel(), navController, args.userToken, args.eventName)
+                }
+                composable<AlbumImageDetailsScreen> {
+                    val args = it.toRoute<AlbumImageDetailsScreen>()
+                    val uri = Uri.parse(args.imageByteArray)
+                    AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
+                }
             }
-            composable<AlbumScreen> {
-                val args = it.toRoute<AlbumScreen>()
-                AlbumScreen(viewModel(), navController, args.userToken, args.eventName)
-            }
-            composable<AlbumImageDetailsScreen> {
-                val args = it.toRoute<AlbumImageDetailsScreen>()
-                val uri = Uri.parse(args.imageByteArray)
-                AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
-            }
+        } else {
+            NoInternetConnectionScreen()
         }
     }
 }
