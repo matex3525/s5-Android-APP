@@ -1,4 +1,6 @@
 *.idea
 *.venv
 *.vs
+*.pyc
 Flask backend/app/__pycache__
+Flask backend/.mypy_cache
