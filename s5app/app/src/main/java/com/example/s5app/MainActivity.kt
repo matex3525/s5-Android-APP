@@ -5,20 +5,26 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -39,11 +45,19 @@ import com.example.s5app.screen.MainScreen
 import com.example.s5app.screen.NoInternetConnectionScreen
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.viewmodel.ConnectivityViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun MainActivityScreen(startDestination: Any) {
     val navController = rememberNavController()
+    // Tworzymy stan dla SnackbarHost
+    val snackbarHostState = remember { SnackbarHostState() }
+    // Tworzymy coroutineScope do obsługi wywołań funkcji wyświetlającej Snackbar
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val viewModel: ConnectivityViewModel = viewModel()
+    val isInternetAvailable by viewModel.isInternetAvailable.collectAsState(initial = true)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -54,32 +68,38 @@ fun MainActivityScreen(startDestination: Any) {
                     titleContentColor = contentColorFor(MaterialTheme.colorScheme.surface)
                 )
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) } // Użycie SnackbarHostState
     ) {
-        val context = LocalContext.current
-        val viewModel: ConnectivityViewModel = viewModel()
-        val isInternetAvailable by viewModel.isInternetAvailable.collectAsState(initial = true)
-        if (isInternetAvailable) {
-            NavHost(
-                navController = navController,
-                startDestination = startDestination,
-                modifier = Modifier.padding(it)
-            ) {
-                composable<MainScreen> {
-                    MainScreen(viewModel(), navController)
-                }
-                composable<AlbumScreen> {
-                    val args = it.toRoute<AlbumScreen>()
-                    AlbumScreen(viewModel(), navController, args.userToken, args.eventName)
-                }
-                composable<AlbumImageDetailsScreen> {
-                    val args = it.toRoute<AlbumImageDetailsScreen>()
-                    val uri = Uri.parse(args.imageByteArray)
-                    AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
+        // Obsługa braku połączenia z internetem
+        LaunchedEffect(isInternetAvailable) {
+            if (!isInternetAvailable) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = "Nie masz połączenia z Internetem.",
+                        actionLabel = "OK"
+                    )
                 }
             }
-        } else {
-            NoInternetConnectionScreen()
+        }
+
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(it)
+        ) {
+            composable<MainScreen> {
+                MainScreen(viewModel(), navController)
+            }
+            composable<AlbumScreen> {
+                val args = it.toRoute<AlbumScreen>()
+                AlbumScreen(viewModel(), navController, args.userToken, args.eventName)
+            }
+            composable<AlbumImageDetailsScreen> {
+                val args = it.toRoute<AlbumImageDetailsScreen>()
+                val uri = Uri.parse(args.imageByteArray)
+                AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
+            }
         }
     }
 }
