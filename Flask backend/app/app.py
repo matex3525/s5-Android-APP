@@ -120,7 +120,7 @@ def endpoint_check_admin_token(user_token: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
     if "admin_token" not in request.json:
-        return success({})
+        return error(ErrorCode.InternalError)
     admin_token = str(request.json["admin_token"])
     if not is_admin_token_valid(user_token,admin_token):
         return error(ErrorCode.IncorrectAdminToken)
