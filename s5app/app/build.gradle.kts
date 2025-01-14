@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.hilt)
+    id("kotlin-kapt")
 }
 
 android {
@@ -50,6 +52,10 @@ android {
     }
 }
 
+hilt { // Dodaj konfigurację Hilt
+    enableAggregatingTask = false
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -72,4 +78,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.retrofit)
     implementation(libs.gson.converter)
+    implementation(libs.dagger.hilt.android)
+    kapt(libs.dagger.hilt.compiler)
+    implementation(libs.hilt.navigation.compose)
 }

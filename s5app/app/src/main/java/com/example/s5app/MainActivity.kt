@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -45,9 +46,9 @@ import com.example.s5app.screen.AlbumImage
 import com.example.s5app.screen.AlbumImageDetailsScreen
 import com.example.s5app.screen.AlbumScreen
 import com.example.s5app.screen.MainScreen
-import com.example.s5app.screen.NoInternetConnectionScreen
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.viewmodel.ConnectivityViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @Composable
@@ -59,7 +60,7 @@ fun MainActivityScreen(startDestination: Any) {
     // Tworzymy coroutineScope do obsługi wywołań funkcji wyświetlającej Snackbar
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val viewModel: ConnectivityViewModel = viewModel()
+    val viewModel= hiltViewModel<ConnectivityViewModel>()
     val isInternetAvailable by viewModel.isInternetAvailable.collectAsState(initial = true)
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -119,6 +120,7 @@ fun MainActivityScreen(startDestination: Any) {
     }
 }
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
