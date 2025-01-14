@@ -2,6 +2,7 @@ package com.example.s5app.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.example.s5app.network.ApiResult
 import com.example.s5app.network.CreateEventParams
 import com.example.s5app.network.CreateEventRequest
 import com.example.s5app.network.CupidApi
@@ -9,7 +10,7 @@ import retrofit2.HttpException
 import java.io.IOException
 
 class MainScreenViewModel: ViewModel() {
-    suspend fun createEvent(eventName: String): CreateEventParams? {
+    suspend fun createEvent(eventName: String): ApiResult<CreateEventParams> {
         return try {
             // Tworzenie żądania
             val request = CreateEventRequest(eventName)
@@ -22,16 +23,16 @@ class MainScreenViewModel: ViewModel() {
                 Log.d("CupidApi", "Success: ${response.success}, user_token: ${response.params.userToken}, admin_token: ${response.params.adminToken}")
 
                 // Zwrot obiektu params z odpowiedzi
-                response.params
+                ApiResult.Success(response.params)
             } else {
                 Log.e("CupidApi", "API failure: success=false")
-                null // Jeśli API zwróci odpowiedź z success=false, zwracamy null
+                ApiResult.Error("API failure: success=false") // Jeśli API zwróci odpowiedź z success=false, zwracamy null
             }
 
         } catch (e: IOException) {
             // Obsługa błędów komunikacji (brak internetu, sieć rozłączona)
             Log.e("CupidApi", "Network failure: ${e.message}")
-            null
+            ApiResult.Error("Network failure: ${e.message}")
         } catch (e: HttpException) {
             // Obsługa błędów HTTP
             when (e.code()) {
@@ -39,11 +40,11 @@ class MainScreenViewModel: ViewModel() {
                 404 -> Log.e("CupidApi", "Not Found: ${e.message()}")
                 else -> Log.e("CupidApi", "HTTP Error: ${e.code()}, ${e.message()}")
             }
-            null
+            ApiResult.Error(e.message.toString())
         } catch (e: Exception) {
             // Obsługa innych wyjątków
             Log.e("CupidApi", "Unexpected failure: ${e.message}")
-            null
+            ApiResult.Error("Unexpected failure: ${e.message}")
         }
     }
 }

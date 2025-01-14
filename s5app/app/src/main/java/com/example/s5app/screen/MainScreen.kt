@@ -34,7 +34,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.s5app.dialog.CupidAlertDialog
 import com.example.s5app.navigation.AlbumScreen
+import com.example.s5app.network.ApiResult
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.viewmodel.MainScreenViewModel
 import kotlinx.coroutines.launch
@@ -44,6 +46,12 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
     var joinCodeText by remember { mutableStateOf("") }
     var eventNameText by remember { mutableStateOf("") }
     var isAlbumListEmpty by remember { mutableStateOf(true) }
+    // Stan do kontrolowania widoczności dialogu
+    val showDialog = remember { mutableStateOf(false) }
+
+    // Stan przechowujący tekst dialogu
+    val dialogTitle = remember { mutableStateOf("") }
+    val dialogText = remember { mutableStateOf("") }
     val coroutineScopeMainScreen = rememberCoroutineScope()
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -99,14 +107,21 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
                             Button(
                                 onClick = {
                                     coroutineScopeMainScreen.launch {
-                                        val response = vm.createEvent(eventNameText)
-                                        if (response != null) {
-                                            navController?.navigate(AlbumScreen(response.userToken, eventNameText))
+                                        val result = vm.createEvent(eventNameText)
+                                        if (result is ApiResult.Success) {
+                                            navController?.navigate(AlbumScreen(result.data.userToken, eventNameText))
+                                        } else {
+                                            dialogTitle.value = "Error"
+                                            dialogText.value = (result as ApiResult.Error).message
+                                            showDialog.value = true // Otwórz dialog
                                         }
                                     }
                                 }
                             ) {
                                 Text(text = "Create your first album")
+                            }
+                            CupidAlertDialog(dialogTitle = dialogTitle.value, dialogText = dialogText.value, showDialog = showDialog.value) {
+                                showDialog.value = false // Zamknij dialog
                             }
                         } else {
                             Button(
