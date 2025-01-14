@@ -46,13 +46,18 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
     var joinCodeText by remember { mutableStateOf("") }
     var eventNameText by remember { mutableStateOf("") }
     var isAlbumListEmpty by remember { mutableStateOf(true) }
-    // Stan do kontrolowania widoczności dialogu
-    val showDialog = remember { mutableStateOf(false) }
 
-    // Stan przechowujący tekst dialogu
+
+    val showDialog = remember { mutableStateOf(false) }
     val dialogTitle = remember { mutableStateOf("") }
     val dialogText = remember { mutableStateOf("") }
+
     val coroutineScopeMainScreen = rememberCoroutineScope()
+
+    CupidAlertDialog(dialogTitle = dialogTitle.value, dialogText = dialogText.value, showDialog = showDialog.value) {
+        showDialog.value = false // Zamknij dialog
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = if (isAlbumListEmpty) Arrangement.Center else Arrangement.Top,
@@ -95,7 +100,16 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
                             Button(
                                 modifier = Modifier.fillMaxWidth(0.5f),
                                 onClick = {
-                                    //@TODO: Join to an event by code.
+                                    coroutineScopeMainScreen.launch {
+                                        val result = vm.getEvent(joinCodeText)
+                                        if (result is ApiResult.Success) {
+                                            navController?.navigate(AlbumScreen(joinCodeText, result.data.eventName))
+                                        } else {
+                                            dialogTitle.value = "Error"
+                                            dialogText.value = (result as ApiResult.Error).message
+                                            showDialog.value = true
+                                        }
+                                    }
                                 }
                             ) {
                                 Text(text = "Join")
@@ -113,15 +127,12 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
                                         } else {
                                             dialogTitle.value = "Error"
                                             dialogText.value = (result as ApiResult.Error).message
-                                            showDialog.value = true // Otwórz dialog
+                                            showDialog.value = true
                                         }
                                     }
                                 }
                             ) {
                                 Text(text = "Create your first album")
-                            }
-                            CupidAlertDialog(dialogTitle = dialogTitle.value, dialogText = dialogText.value, showDialog = showDialog.value) {
-                                showDialog.value = false // Zamknij dialog
                             }
                         } else {
                             Button(

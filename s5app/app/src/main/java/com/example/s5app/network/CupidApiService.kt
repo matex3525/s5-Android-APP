@@ -5,6 +5,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.POST
 import kotlinx.serialization.Serializable
+import retrofit2.http.GET
+import retrofit2.http.Path
 
 private const val BASE_URL =
     "http://10.0.2.2:8080"
@@ -17,6 +19,9 @@ private val retrofit = Retrofit.Builder()
 interface CupidApiService {
     @POST("/v0/event")
     suspend fun createEvent(@Body request: CreateEventRequest): ApiResponse<CreateEventParams>
+
+    @GET("v0/event/{user_token}")
+    suspend fun getEvent(@Path("user_token") userToken: String): ApiResponse<GetEventParams>
 }
 
 object CupidApi {
