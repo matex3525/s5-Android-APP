@@ -62,6 +62,8 @@ Sprawdza poprawność tokenu admina dla wydarzenia &lt;user_token&gt;.
 {"success": true,"params": {"event_name": "nazwa wydarzenia"}}
 ```
 
+## Endpointy do zdjęć
+
 ### ``/v0/event/<user_token>/imagecount`` (GET)
 Zwraca ilość zdjęć przypisanych do wydarzenia &lt;user_token&gt;.
 #### Zwraca
@@ -135,6 +137,35 @@ Zwraca dane zdjęcia o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
 }
 ```
 
+### ``/v0/event/<user_token>/image/byindices/<first_image_index>/<last_image_index>`` (GET)
+Zwraca dane zdjęć o indeksach od &lt;first_image_index&gt; do &lt;last_image_index&gt; (włączenie) z wydarzenia &lt;user_token&gt;.<br>
+Jeśli `first_image_index == 0` oraz `last_image_index == -1`, to zwraca wszystkie zdjęcia.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [
+		{
+			"image_id": "ID zdjęcia 1",
+			"width": /*szerokość zdjęcia w pikselach*/,
+			"height": /*wysokość zdjęcia w pikselach*/,
+			"description": "opis zdjęcia",
+			"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64"
+		},
+		{
+			"image_id": "ID zdjęcia 2",
+			"width": /*szerokość zdjęcia w pikselach*/,
+			"height": /*wysokość zdjęcia w pikselach*/,
+			"description": "opis zdjęcia",
+			"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64"
+		},
+		/*...*/
+	]
+}
+```
+
+## Endpointy do komentarzy
+
 ### ``/v0/event/<user_token>/image/byid/<image_id>/comment`` (POST)
 Dodaj komentarz do zdjęcia o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.
 #### Przyjmuje
@@ -196,5 +227,28 @@ Zwraca dane komentarza o ID &lt;comment_id&gt; przypisanego do zdjęcia &lt;imag
 		"text": "Treść komentarza",
 		"time": /*Czas dodania komentarza w milisekundach od 1 stycznia 1970 r.*/
 	}]
+}
+```
+
+### ``/v0/event/<user_token>/image/byid/<image_id>/comment/byindices/<first_comment_index>/<last_comment_index>`` (GET)
+Zwraca dane komentarzy o indeksach od &lt;first_comment_index&gt; do &lt;last_comment_index&gt; (włączenie) przypisanych do zdjęcia &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.<br>
+Jeśli `first_comment_index == 0` oraz `last_comment_index == -1`, to zwraca wszystkie komentarze.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [
+		{
+			"comment_id": "ID komentarza 1",
+			"text": "Treść komentarza",
+			"time": /*Czas dodania komentarza w milisekundach od 1 stycznia 1970 r.*/
+		},
+		{
+			"comment_id": "ID komentarza 2",
+			"text": "Treść komentarza",
+			"time": /*Czas dodania komentarza w milisekundach od 1 stycznia 1970 r.*/
+		},
+		/*...*/
+	]
 }
 ```

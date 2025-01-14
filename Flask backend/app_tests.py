@@ -122,6 +122,17 @@ def endpoint_get_image_by_id(name: str,*args: str):
     if not check_value_is_bool(args[2]): return
     show_image_from_base64_encoded_pixels(image_response)
 
+def endpoint_get_images_by_indices(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (first_image_index) (last_image_index)")
+    response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byindices/{args[1]}/{args[2]}",{},False)
+    if int(response["success"]) == 0:
+        print(f"Response: Error code: {response["params"]}")
+        return
+    params = response["params"]
+    for image_response in params:
+        print_image_response(image_response)
+
 def endpoint_add_comment(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (image_id) (comment_text)")
@@ -152,6 +163,11 @@ def endpoint_get_image_comment_by_id(name: str,*args: str):
         raise Exception(f"Syntax: {name} (user_token) (image_id) (comment_id)")
     make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byid/{args[2]}",{})
 
+def endpoint_get_image_comments_by_indices(name: str,*args: str):
+    if len(args) != 4:
+        raise Exception(f"Syntax: {name} (user_token) (image_id) (first_comment_index) (last_comment_index)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byindices/{args[2]}/{args[3]}",{})
+
 all_commands = {
     "create_event": endpoint_create_event,
     "delete_event": endpoint_delete_event,
@@ -163,12 +179,14 @@ all_commands = {
     "delete_image": endpoint_delete_image,
     "image_by_index": endpoint_get_image_by_index,
     "image_by_id": endpoint_get_image_by_id,
+    "images_by_indices": endpoint_get_images_by_indices,
     "add_comment": endpoint_add_comment,
     "comment_count": endpoint_get_image_comment_count,
     "comment_ids": endpoint_get_image_comment_ids,
     "delete_comment_by_id": endpoint_delete_comment_by_id,
     "comment_by_index": endpoint_get_image_comment_by_index,
     "comment_by_id": endpoint_get_image_comment_by_id,
+    "comments_by_indices": endpoint_get_image_comments_by_indices,
     "exit": cmd_exit,
     "help": cmd_help
 }
