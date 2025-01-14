@@ -214,17 +214,52 @@ def endpoint_get_image_by_index(user_token: str,image_index: str):
     image_id = str(tmp)
     return endpoint_get_image_by_id(user_token,image_id)
 
-@app.get("/v0/event/<user_token>/image/byid/<image_id>")
-def endpoint_get_image_by_id(user_token: str,image_id: str):
-    if not does_event_exist(user_token):
-        return error(ErrorCode.IncorrectUserToken)
+def get_image_by_id(user_token: str,image_id: str):
     stream = database.xrange(image_stream_name(user_token),image_id,"+",1)
     data = None
     for identifier,attributes in stream:
         temp = {"image_id": identifier}
         temp.update(attributes)
         data = temp
+    return data
+
+@app.get("/v0/event/<user_token>/image/byid/<image_id>")
+def endpoint_get_image_by_id(user_token: str,image_id: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    data = get_image_by_id(user_token,image_id)
     return success([data] if data is not None else [])
+
+#@TODO: This looks bad.
+@app.get("/v0/event/<user_token>/image/byindices/<first_image_index>/<last_image_index>")
+def endpoint_get_images_by_indices(user_token: str,first_image_index: str,last_image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+
+    first_image_index = int(first_image_index)
+    last_image_index = int(last_image_index)
+    if first_image_index == 0 and last_image_index == -1:
+        stream = database.xrange(image_stream_name(user_token),"0-0","+")
+        image_datas = []
+        for identifier,attributes in stream:
+            temp = {"image_id": identifier}
+            temp.update(attributes)
+            image_datas.append(temp)
+        return success(image_datas)
+    else:
+        if first_image_index < 0 or last_image_index < 0 or last_image_index < first_image_index:
+            return error(ErrorCode.InvalidImageIndex)
+
+        image_datas = []
+        list_name = image_id_list_name(user_token)
+        for image_index in range(first_image_index,last_image_index + 1):
+            tmp = database.lindex(list_name,image_index)
+            if tmp is None: continue
+            image_id = str(tmp)
+            data = get_image_by_id(user_token,image_id)
+            if data is None: continue
+            image_datas.append(data)
+        return success(image_datas)
 
 ################################################################
 #                    ENDPOINTS (COMMENTS)                      #
@@ -284,24 +319,57 @@ def endpoint_delete_comment_by_id(user_token: str,image_id: str,comment_id: str)
     transaction.execute(raise_on_error = True)
     return success({})
 
-@app.get("/v0/event/<user_token>/image/byid/<image_id>/comment/byindex/<comment_index>")
-def endpoint_get_image_comment_by_index(user_token: str,image_id: str,comment_index: str):
-    if not does_event_exist(user_token):
-        return error(ErrorCode.IncorrectUserToken)
-    tmp = database.lindex(image_comment_id_list_name(user_token,image_id),comment_index)
-    if tmp is None:
-        return error(ErrorCode.InvalidCommentIndex)
-    comment_id = str(tmp)
-    return endpoint_get_image_comment_by_id(user_token,image_id,comment_id)
-
-@app.get("/v0/event/<user_token>/image/byid/<image_id>/comment/byid/<comment_id>")
-def endpoint_get_image_comment_by_id(user_token: str,image_id: str,comment_id: str):
-    if not does_event_exist(user_token):
-        return error(ErrorCode.IncorrectUserToken)
+def get_image_comment_by_id(user_token: str,image_id: str,comment_id: str):
     stream = database.xrange(image_comment_stream_name(user_token,image_id),comment_id,"+",1)
     data = None
     for identifier,attributes in stream:
         temp = {"comment_id": identifier}
         temp.update(attributes)
         data = temp
+    return data
+
+@app.get("/v0/event/<user_token>/image/byid/<image_id>/comment/byindex/<comment_index>")
+def endpoint_get_image_comment_by_index(user_token: str,image_id: str,comment_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    comment_id = database.lindex(image_comment_id_list_name(user_token,image_id),comment_index)
+    if comment_id is None:
+        return error(ErrorCode.InvalidCommentIndex)
+    return endpoint_get_image_comment_by_id(user_token,image_id,str(comment_id))
+
+@app.get("/v0/event/<user_token>/image/byid/<image_id>/comment/byid/<comment_id>")
+def endpoint_get_image_comment_by_id(user_token: str,image_id: str,comment_id: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    data = get_image_comment_by_id(user_token,image_id,comment_id)
     return success([data] if data is not None else [])
+
+#@TODO: This looks bad.
+@app.get("/v0/event/<user_token>/image/byid/<image_id>/comment/byindices/<first_comment_index>/<last_comment_index>")
+def endpoint_get_image_comments_by_indices(user_token: str,image_id: str,first_comment_index: str,last_comment_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+
+    first_comment_index = int(first_comment_index)
+    last_comment_index = int(last_comment_index)
+    if first_comment_index == 0 and last_comment_index == -1:
+        stream = database.xrange(image_comment_stream_name(user_token,image_id),"0-0","+")
+        comment_datas = []
+        for identifier,attributes in stream:
+            temp = {"comment_id": identifier}
+            temp.update(attributes)
+            comment_datas.append(temp)
+        return success(comment_datas)
+    else:
+        if first_comment_index < 0 or last_comment_index < 0 or last_comment_index < first_comment_index:
+            return error(ErrorCode.InvalidCommentIndex)
+
+        image_comment_id_list = image_comment_id_list_name(user_token,image_id)
+        comment_datas = []
+        for comment_index in range(first_comment_index,last_comment_index + 1):
+            comment_id = database.lindex(image_comment_id_list,comment_index)
+            if comment_id is None: continue
+            data = get_image_comment_by_id(user_token,image_id,str(comment_id))
+            if data is None: continue
+            comment_datas.append(data)
+        return success(comment_datas)
