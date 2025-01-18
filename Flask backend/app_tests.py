@@ -106,6 +106,8 @@ def endpoint_get_image_by_index(name: str,*args: str):
     if len(args) != 2 and len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (image_index: int) {{show_image: bool}}")
     response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byindex/{args[1]}",{},False)
+    if int(response["success"]) == 0:
+        raise Exception(f"Response: Error code: {response["params"]}")
     image_response = response["params"][0]
     print_image_response(image_response)
     if len(args) != 3: return
@@ -116,6 +118,8 @@ def endpoint_get_image_by_id(name: str,*args: str):
     if len(args) != 2 and len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (image_id) {{show_image: bool}}")
     response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}",{},False)
+    if int(response["success"]) == 0:
+        raise Exception(f"Response: Error code: {response["params"]}")
     image_response = response["params"][0]
     print_image_response(image_response)
     if len(args) != 3: return
@@ -127,8 +131,41 @@ def endpoint_get_images_by_indices(name: str,*args: str):
         raise Exception(f"Syntax: {name} (user_token) (first_image_index) (last_image_index)")
     response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byindices/{args[1]}/{args[2]}",{},False)
     if int(response["success"]) == 0:
-        print(f"Response: Error code: {response["params"]}")
-        return
+        raise Exception(f"Response: Error code: {response["params"]}")
+    params = response["params"]
+    for image_response in params:
+        print_image_response(image_response)
+
+def endpoint_get_image_thumb_by_index(name: str,*args: str):
+    if len(args) != 2 and len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (image_index: int) {{show_image: bool}}")
+    response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/imagethumbs/byindex/{args[1]}",{},False)
+    if int(response["success"]) == 0:
+        raise Exception(f"Response: Error code: {response["params"]}")
+    image_response = response["params"][0]
+    print_image_response(image_response)
+    if len(args) != 3: return
+    if not check_value_is_bool(args[2]): return
+    show_image_from_base64_encoded_pixels(image_response)
+
+def endpoint_get_image_thumb_by_id(name: str,*args: str):
+    if len(args) != 2 and len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (image_id) {{show_image: bool}}")
+    response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/imagethumbs/byid/{args[1]}",{},False)
+    if int(response["success"]) == 0:
+        raise Exception(f"Response: Error code: {response["params"]}")
+    image_response = response["params"][0]
+    print_image_response(image_response)
+    if len(args) != 3: return
+    if not check_value_is_bool(args[2]): return
+    show_image_from_base64_encoded_pixels(image_response)
+
+def endpoint_get_image_thumbs_by_indices(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (first_image_index) (last_image_index)")
+    response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/imagethumbs/byindices/{args[1]}/{args[2]}",{},False)
+    if int(response["success"]) == 0:
+        raise Exception(f"Response: Error code: {response["params"]}")
     params = response["params"]
     for image_response in params:
         print_image_response(image_response)
@@ -180,6 +217,9 @@ all_commands = {
     "image_by_index": endpoint_get_image_by_index,
     "image_by_id": endpoint_get_image_by_id,
     "images_by_indices": endpoint_get_images_by_indices,
+    "image_thumb_by_index": endpoint_get_image_thumb_by_index,
+    "image_thumb_by_id": endpoint_get_image_thumb_by_id,
+    "image_thumbs_by_indices": endpoint_get_image_thumbs_by_indices,
     "add_comment": endpoint_add_comment,
     "comment_count": endpoint_get_image_comment_count,
     "comment_ids": endpoint_get_image_comment_ids,

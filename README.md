@@ -164,6 +164,67 @@ Jeśli `first_image_index == 0` oraz `last_image_index == -1`, to zwraca wszystk
 }
 ```
 
+## Endpointy do ikon (zmniejszonych wersji zdjęć, które służą do wyświetlania ich na podglądach lub w sytuacjach, w których pełna jakość nie jest wymagana)
+
+### ``/v0/event/<user_token>/imagethumbs/byindex/<image_index>`` (GET)
+Zwraca dane ikony o indeksie &lt;image_index&gt; z wydarzenia &lt;user_token&gt;.<br>
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"image_id": "ID zdjęcia, do którego należy ikona",
+		"width": /*szerokość ikony w pikselach*/,
+		"height": /*wysokość ikony w pikselach*/,
+		"description": "opis zdjęcia, do którego należy ikona",
+		"pixels": "piksele ikony w formacie ARGB8888 zakodowane w Base64"
+	}]
+}
+```
+
+### ``/v0/event/<user_token>/imagethumbs/byid/<image_id>`` (GET)
+Zwraca dane ikony o ID &lt;image_id&gt; z wydarzenia &lt;user_token&gt;.<br>
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"image_id": "ID zdjęcia, do którego należy ikona",
+		"width": /*szerokość ikony w pikselach*/,
+		"height": /*wysokość ikony w pikselach*/,
+		"description": "opis zdjęcia, do którego należy ikona",
+		"pixels": "piksele ikony w formacie ARGB8888 zakodowane w Base64"
+	}]
+}
+```
+
+### ``/v0/event/<user_token>/imagethumbs/byindices/<first_image_index>/<last_image_index>`` (GET)
+Zwraca dane ikon o indeksach od &lt;first_image_index&gt; do &lt;last_image_index&gt; (włączenie) z wydarzenia &lt;user_token&gt;.<br>
+Jeśli `first_image_index == 0` oraz `last_image_index == -1`, to zwraca wszystkie ikony.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [
+		{
+			"image_id": "ID zdjęcia, do którego należy ikona 1",
+			"width": /*szerokość ikony w pikselach*/,
+			"height": /*wysokość ikony w pikselach*/,
+			"description": "opis zdjęcia, do którego należy ikona",
+			"pixels": "piksele ikony w formacie ARGB8888 zakodowane w Base64"
+		},
+		{
+			"image_id": "ID zdjęcia, do którego należy ikona 2",
+			"width": /*szerokość ikony w pikselach*/,
+			"height": /*wysokość ikony w pikselach*/,
+			"description": "opis zdjęcia, do którego należy ikona",
+			"pixels": "piksele ikony w formacie ARGB8888 zakodowane w Base64"
+		},
+		/*...*/
+	]
+}
+```
+
 ## Endpointy do komentarzy
 
 ### ``/v0/event/<user_token>/image/byid/<image_id>/comment`` (POST)

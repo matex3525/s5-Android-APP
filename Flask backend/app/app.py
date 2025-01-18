@@ -1,8 +1,10 @@
 import sys
 import time
 import redis
+import base64
 import secrets
 import werkzeug
+from PIL import Image
 import werkzeug.exceptions
 from flask import Flask,request
 
@@ -52,6 +54,9 @@ def does_event_exist(user_token: str) -> bool:
 def is_admin_token_valid(user_token: str,admin_token: str) -> bool:
     return database.hget("admin_tokens",user_token) == admin_token
 
+def flatten_list_of_iterables(data):
+    return [y for x in data for y in x]
+
 @app.errorhandler(werkzeug.exceptions.InternalServerError)
 def handle_internal_server_error(error):
     log_endpoint_error(str(error))
@@ -83,7 +88,7 @@ def endpoint_create_event():
     transaction.sadd("user_tokens",user_token)
     transaction.hset("admin_tokens",user_token,admin_token)
     transaction.hset("event_names",user_token,event_name)
-    transaction.execute(raise_on_error = True)
+    transaction.execute()
     return success({"user_token": user_token,"admin_token": admin_token})
 
 @app.delete("/v0/event/<user_token>")
@@ -106,7 +111,7 @@ def endpoint_delete_event(user_token: str):
     transaction.hdel("event_names",user_token)
     transaction.hdel("admin_tokens",user_token)
     transaction.srem("user_tokens",user_token)
-    transaction.execute(raise_on_error = True)
+    transaction.execute()
     return success({})
 
 @app.get("/v0/event/<user_token>")
@@ -130,6 +135,13 @@ def endpoint_check_admin_token(user_token: str):
 #                     ENDPOINTS (IMAGES)                       #
 ################################################################
 
+def generate_image_thumb(base64_pixels: str,width: int,height: int,thumb_width: int,thumb_height: int) -> str:
+    pixels = base64.b64decode(base64_pixels.encode("utf-8"))
+    image = Image.frombytes(mode = "RGBA",size = (width,height),data = pixels)
+    thumb_image = image.resize(size = (thumb_width,thumb_height))
+    thumb_pixels = bytearray(flatten_list_of_iterables([(pixel[0],pixel[1],pixel[2],pixel[3] if len(pixel) >= 4 else 255) for pixel in thumb_image.getdata()]))
+    return base64.b64encode(thumb_pixels).decode("utf-8")
+
 @app.get("/v0/event/<user_token>/imagecount")
 def endpoint_get_image_count(user_token: str):
     if not does_event_exist(user_token):
@@ -142,7 +154,9 @@ def endpoint_get_image_ids(user_token: str,first_index: str,last_index: str):
         return error(ErrorCode.IncorrectUserToken)
     first_index = int(first_index)
     last_index = int(last_index)
-    if (last_index < first_index and last_index != -1) or first_index < 0 or last_index < -1:
+    if first_index == 0 and last_index == -1:
+        return success(database.lrange(image_id_list_name(user_token),first_index,last_index))
+    if first_index < 0 or last_index < 0:
         return error(ErrorCode.InternalError)
     return success(database.lrange(image_id_list_name(user_token),first_index,last_index))
 
@@ -154,19 +168,19 @@ def endpoint_add_image(user_token: str):
     if "width" not in request.json:
         return error(ErrorCode.InternalError)
     width = int(request.json["width"])
-    if width < 0 or width > 8192:
+    if width < 2 or width > 8192:
         return error(ErrorCode.ImageWidthInvalid)
 
     if "height" not in request.json:
         return error(ErrorCode.InternalError)
     height = int(request.json["height"])
-    if height < 0 or height > 8192:
+    if height < 2 or height > 8192:
         return error(ErrorCode.ImageHeightInvalid)
 
     if "description" not in request.json:
         return error(ErrorCode.InternalError)
     description = str(request.json["description"])
-    if len(description) > 128:
+    if len(description) > 256:
         return error(ErrorCode.StringTooLong)
     if not filter_user_string(description):
         return error(ErrorCode.StringFailedFiltering)
@@ -175,14 +189,29 @@ def endpoint_add_image(user_token: str):
         return error(ErrorCode.InternalError)
     pixels = str(request.json["pixels"])
 
-    #Using 'xadd' on a pipeline doesn't return stream ID.
-    image_id = database.xadd(image_stream_name(user_token),{
+    thumb_width = 256 if width > 256 else width
+    thumb_height = int(thumb_width * (height / width))
+    thumb_pixels = generate_image_thumb(pixels,width,height,thumb_width,thumb_height)
+
+    image_time = time.time_ns() // 1000000
+    stream_name = image_stream_name(user_token)
+    list_name = image_id_list_name(user_token)
+    image_id = database.xadd(stream_name,{
         "width": width,
         "height": height,
         "description": description,
-        "pixels": pixels
+        "pixels": pixels,
+        "thumbWidth": thumb_width,
+        "thumbHeight": thumb_height,
+        "thumbPixels": thumb_pixels,
+        "time": image_time
     })
-    database.lpush(image_id_list_name(user_token),image_id)
+    #@TODO: Does this make any sense?
+    try:
+        database.lpush(list_name,image_id)
+    except:
+        database.xdel(stream_name,image_id)
+        raise
     return success({"image_id": image_id})
 
 @app.delete("/v0/event/<user_token>/image/byid/<image_id>")
@@ -201,65 +230,98 @@ def endpoint_delete_image(user_token: str,image_id: str):
     transaction.xtrim(image_comment_stream_name(user_token,image_id),minid = "0-0")
     transaction.lrem(image_id_list_name(user_token),0,image_id)
     transaction.xdel(image_stream_name(user_token),image_id)
-    transaction.execute(raise_on_error = True)
+    transaction.execute()
     return success({})
+
+def get_images_by_ids(*,user_token: str,start_image_id: str,count: int | None,is_thumb: bool):
+    width_name = "thumbWidth" if is_thumb else "width"
+    height_name = "thumbHeight" if is_thumb else "height"
+    pixels_name = "thumbPixels" if is_thumb else "pixels"
+    stream = database.xrange(image_stream_name(user_token),start_image_id,"+",count)
+    result = []
+    for identifier,attributes in stream:
+        result.append({
+            "image_id": identifier,
+            "width": int(attributes[width_name]) if width_name in attributes else 0,
+            "height": int(attributes[height_name]) if height_name in attributes else 0,
+            "description": attributes["description"],
+            "pixels": attributes[pixels_name] if pixels_name in attributes else "",
+        })
+    return result
 
 @app.get("/v0/event/<user_token>/image/byindex/<image_index>")
 def endpoint_get_image_by_index(user_token: str,image_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-    tmp = database.lindex(image_id_list_name(user_token),image_index)
-    if tmp is None:
-        return error(ErrorCode.InvalidImageIndex)
-    image_id = str(tmp)
-    return endpoint_get_image_by_id(user_token,image_id)
-
-def get_image_by_id(user_token: str,image_id: str):
-    stream = database.xrange(image_stream_name(user_token),image_id,"+",1)
-    data = None
-    for identifier,attributes in stream:
-        temp = {"image_id": identifier}
-        temp.update(attributes)
-        data = temp
-    return data
+    image_id = database.lindex(image_id_list_name(user_token),image_index)
+    if image_id is None: return error(ErrorCode.InvalidImageIndex)
+    return endpoint_get_image_by_id(user_token,str(image_id))
 
 @app.get("/v0/event/<user_token>/image/byid/<image_id>")
 def endpoint_get_image_by_id(user_token: str,image_id: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-    data = get_image_by_id(user_token,image_id)
-    return success([data] if data is not None else [])
+    data = get_images_by_ids(user_token = user_token,start_image_id = image_id,count = 1,is_thumb = False)
+    return success(data)
 
-#@TODO: This looks bad.
 @app.get("/v0/event/<user_token>/image/byindices/<first_image_index>/<last_image_index>")
 def endpoint_get_images_by_indices(user_token: str,first_image_index: str,last_image_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-
     first_image_index = int(first_image_index)
     last_image_index = int(last_image_index)
-    if first_image_index == 0 and last_image_index == -1:
-        stream = database.xrange(image_stream_name(user_token),"0-0","+")
-        image_datas = []
-        for identifier,attributes in stream:
-            temp = {"image_id": identifier}
-            temp.update(attributes)
-            image_datas.append(temp)
-        return success(image_datas)
-    else:
-        if first_image_index < 0 or last_image_index < 0 or last_image_index < first_image_index:
-            return error(ErrorCode.InvalidImageIndex)
 
-        image_datas = []
-        list_name = image_id_list_name(user_token)
-        for image_index in range(first_image_index,last_image_index + 1):
-            tmp = database.lindex(list_name,image_index)
-            if tmp is None: continue
-            image_id = str(tmp)
-            data = get_image_by_id(user_token,image_id)
-            if data is None: continue
-            image_datas.append(data)
-        return success(image_datas)
+    if first_image_index == 0 and last_image_index == -1:
+        data = get_images_by_ids(user_token = user_token,start_image_id = "0-0",count = None,is_thumb = False)
+        return success(data)
+    if first_image_index < 0 or last_image_index < 0:
+        return error(ErrorCode.InvalidImageIndex)
+
+    result = []
+    image_ids = database.lrange(image_id_list_name(user_token),first_image_index,last_image_index)
+    for image_id in image_ids:
+        data = get_images_by_ids(user_token = user_token,start_image_id = str(image_id),count = 1,is_thumb = False)
+        result.extend(data)
+    return success(result)
+
+################################################################
+#                   ENDPOINTS (IMAGE THUMBS)                   #
+################################################################
+
+@app.get("/v0/event/<user_token>/imagethumbs/byindex/<image_index>")
+def endpoint_get_image_thumb_by_index(user_token: str,image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    image_id = database.lindex(image_id_list_name(user_token),image_index)
+    if image_id is None: return error(ErrorCode.InvalidImageIndex)
+    return endpoint_get_image_thumb_by_id(user_token,str(image_id))
+
+@app.get("/v0/event/<user_token>/imagethumbs/byid/<image_id>")
+def endpoint_get_image_thumb_by_id(user_token: str,image_id: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    data = get_images_by_ids(user_token = user_token,start_image_id = str(image_id),count = 1,is_thumb = True)
+    return success(data)
+
+@app.get("/v0/event/<user_token>/imagethumbs/byindices/<first_image_index>/<last_image_index>")
+def endpoint_get_image_thumbs_by_indices(user_token: str,first_image_index: str,last_image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    first_image_index = int(first_image_index)
+    last_image_index = int(last_image_index)
+
+    if first_image_index == 0 and last_image_index == -1:
+        data = get_images_by_ids(user_token = user_token,start_image_id = "0-0",count = None,is_thumb = True)
+        return success(data)
+    if first_image_index < 0 or last_image_index < 0:
+        return error(ErrorCode.InvalidImageIndex)
+
+    result = []
+    image_ids = database.lrange(image_id_list_name(user_token),first_image_index,last_image_index)
+    for image_id in image_ids:
+        data = get_images_by_ids(user_token = user_token,start_image_id = str(image_id),count = 1,is_thumb = True)
+        result.extend(data)
+    return success(result)
 
 ################################################################
 #                    ENDPOINTS (COMMENTS)                      #
@@ -278,13 +340,19 @@ def endpoint_add_comment(user_token: str,image_id: str):
     if not filter_user_string(text):
         return error(ErrorCode.StringFailedFiltering)
 
-    commentTime = time.time_ns() // 1000000
-    comment_id = database.xadd(image_comment_stream_name(user_token,image_id),{
+    stream_name = image_comment_stream_name(user_token,image_id)
+    list_name = image_comment_id_list_name(user_token,image_id)
+    comment_time = time.time_ns() // 1000000
+    comment_id = database.xadd(stream_name,{
         "text": text,
-        "time": commentTime
+        "time": comment_time
     })
-    database.lpush(image_comment_id_list_name(user_token,image_id),comment_id)
-    return success({"comment_id": comment_id,"time": commentTime})
+    try:
+        database.lpush(list_name,comment_id)
+    except:
+        database.xdel(stream_name,comment_id)
+        raise
+    return success({"comment_id": comment_id,"time": comment_time})
 
 @app.get("/v0/event/<user_token>/image/byid/<image_id>/commentcount")
 def endpoint_get_image_comment_count(user_token: str,image_id: str):
@@ -316,7 +384,7 @@ def endpoint_delete_comment_by_id(user_token: str,image_id: str,comment_id: str)
     transaction = database.pipeline()
     transaction.lrem(image_comment_id_list_name(user_token,image_id),0,comment_id)
     transaction.xdel(image_comment_stream_name(user_token,image_id),comment_id)
-    transaction.execute(raise_on_error = True)
+    transaction.execute()
     return success({})
 
 def get_image_comment_by_id(user_token: str,image_id: str,comment_id: str):
