@@ -533,9 +533,12 @@ def get_albums_by_ids(*,user_token: str,start_album_id: str,count: int | None):
     stream = database.xrange(album_stream_name(user_token),start_album_id,"+",count)
     result = []
     for identifier,attributes in stream:
+        image_count = database.llen(album_image_id_list_name(user_token,identifier))
+        if image_count is None: image_count = 0
         result.append({
             "album_id": identifier,
             "name": attributes["name"],
+            "image_count": int(image_count),
             "time": int(attributes["time"])
         })
     return result

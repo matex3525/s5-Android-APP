@@ -363,11 +363,13 @@ Zwraca listę albumów o indeksach od &lt;first_album_index&gt; do &lt;last_albu
 		{
             "album_id": "ID albumu 1",
             "name": "Nazwa albumu 1",
+			"image_count": /*Ilość zdjęć należących do albumu 1*/,
             "time": /*Czas dodania albumu 1 w milisekundach od 1 stycznia 1970 r.*/
         },
 		{
             "album_id": "ID albumu 2",
             "name": "Nazwa albumu 2",
+			"image_count": /*Ilość zdjęć należących do albumu 2*/,
             "time": /*Czas dodania albumu 2 w milisekundach od 1 stycznia 1970 r.*/
         },
 		...
@@ -384,6 +386,7 @@ Zwraca album o indeksie &lt;album_index&gt; z wydarzenia &lt;user_token&gt;.
 	"params": [{
 		"album_id": "ID albumu",
 		"name": "Nazwa albumu",
+		"image_count": /*Ilość zdjęć należących do albumu*/,
 		"time": /*Czas dodania albumu w milisekundach od 1 stycznia 1970 r.*/
 	}]
 }
@@ -398,6 +401,7 @@ Zwraca album o ID &lt;album_id&gt; z wydarzenia &lt;user_token&gt;.
 	"params": [{
 		"album_id": "ID albumu",
 		"name": "Nazwa albumu",
+		"image_count": /*Ilość zdjęć należących do albumu*/,
 		"time": /*Czas dodania albumu w milisekundach od 1 stycznia 1970 r.*/
 	}]
 }
