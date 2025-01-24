@@ -79,7 +79,7 @@ Zwraca ID zdjęć przypisanych do wydarzenia &lt;user_token&gt; o indeksach od &
 ```
 
 ### ``/v0/event/<user_token>/image`` (POST)
-Dodaj zdjęcie do wydarzenia &lt;user_token&gt;.
+Dodaje zdjęcie do wydarzenia &lt;user_token&gt;.
 #### Przyjmuje
 ```json
 {
@@ -87,6 +87,16 @@ Dodaj zdjęcie do wydarzenia &lt;user_token&gt;.
 	"height": /*wysokość zdjęcia w pikselach*/,
 	"description": "opis zdjęcia",
 	"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64"
+}
+```
+lub
+```json
+{
+	"width": /*szerokość zdjęcia w pikselach*/,
+	"height": /*wysokość zdjęcia w pikselach*/,
+	"description": "opis zdjęcia",
+	"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64",
+	"album_id": "ID albumu, do którego przypisać zdjęcie"
 }
 ```
 #### Zwraca
@@ -311,5 +321,92 @@ Jeśli `first_comment_index == 0` oraz `last_comment_index == -1`, to zwraca wsz
 		},
 		/*...*/
 	]
+}
+```
+
+## Endpointy do albumów (folderów na zdjęcia)
+
+### ``/v0/event/<user_token>/album`` (POST)
+Dodaje album do wydarzenia &lt;user_token&gt;.
+#### Przyjmuje
+```json
+{"name": "Nazwa albumu"}
+```
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": {"album_id": "ID albumu","time": /*Czas dodania albumu w milisekundach od 1 stycznia 1970 r.*/}
+}
+```
+
+### ``/v0/event/<user_token>/album/byid/<album_id>`` (DELETE)
+Usuwa album o ID &lt;album_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Przyjmuje
+```json
+{"admin_token": "token admina"}
+```
+#### Zwraca
+```json
+{"success": true,"params": {}}
+```
+
+### ``/v0/event/<user_token>/album/byindices/<first_album_index>/<last_album_index>`` (GET)
+Zwraca listę albumów o indeksach od &lt;first_album_index&gt; do &lt;last_album_index&gt; (włączenie) z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [
+		{
+            "album_id": "ID albumu 1",
+            "name": "Nazwa albumu 1",
+            "time": /*Czas dodania albumu 1 w milisekundach od 1 stycznia 1970 r.*/
+        },
+		{
+            "album_id": "ID albumu 2",
+            "name": "Nazwa albumu 2",
+            "time": /*Czas dodania albumu 2 w milisekundach od 1 stycznia 1970 r.*/
+        },
+		...
+	]
+}
+```
+
+### ``/v0/event/<user_token>/album/byindex/<album_index>`` (GET)
+Zwraca album o indeksie &lt;album_index&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"album_id": "ID albumu",
+		"name": "Nazwa albumu",
+		"time": /*Czas dodania albumu w milisekundach od 1 stycznia 1970 r.*/
+	}]
+}
+```
+
+### ``/v0/event/<user_token>/album/byid/<album_id>`` (GET)
+Zwraca album o ID &lt;album_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"album_id": "ID albumu",
+		"name": "Nazwa albumu",
+		"time": /*Czas dodania albumu w milisekundach od 1 stycznia 1970 r.*/
+	}]
+}
+```
+
+### ``/v0/event/<user_token>/album/byid/<album_id>/imageids/<first_image_index>/<last_image_index>`` (GET)
+Zwraca ID zdjęć przypisanych do albumu &lt;album_id&gt; o indeksach od &lt;first_image_index&gt; do &lt;last_image_index&gt; (włączenie) z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": ["ID zdjęcia 1","ID zdjęcia 2",...]
 }
 ```
