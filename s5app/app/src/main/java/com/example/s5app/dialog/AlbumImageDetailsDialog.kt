@@ -34,86 +34,86 @@ import com.example.s5app.ui.theme.S5appTheme
 
 @Composable
 fun AlbumImageDetailsDialog(albumImage: AlbumImage, onDismissRequest: () -> Unit) {
-    var newComment by remember { mutableStateOf("") }
-    Dialog(onDismissRequest = { onDismissRequest() }) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.5f)
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(48.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier
-
-                            .size(200.dp)
-
-                    ) {
-                        // Your content here
-                        albumImage.imageBitmap?.let {
-                            Image(
-                                bitmap = it,
-                                contentDescription = "Selected Image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        }
-                    }
-//                    Row(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.Center
+//    var newComment by remember { mutableStateOf("") }
+//    Dialog(onDismissRequest = { onDismissRequest() }) {
+//        Card(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .fillMaxHeight(0.5f)
+//                .padding(16.dp),
+//            shape = RoundedCornerShape(16.dp)
+//        ) {
+//            Box(
+//                modifier = Modifier.fillMaxSize(),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Column(
+//                    horizontalAlignment = Alignment.CenterHorizontally,
+//                    verticalArrangement = Arrangement.spacedBy(48.dp)
+//                ) {
+//                    Surface(
+//                        shape = RoundedCornerShape(16.dp),
+//                        modifier = Modifier
+//
+//                            .size(200.dp)
+//
 //                    ) {
-//                        TextField(
-//                            modifier = Modifier.fillMaxWidth(0.4f),
-//                            value = newComment,
-//                            onValueChange = { newComment = it },
-//                            singleLine = true,
-//                            label = { Text("Add new comment") }
-//                        )
-//                        Spacer(modifier = Modifier.width(8.dp))
-//                        Button(
-//                            modifier = Modifier.fillMaxWidth(0.5f),
-//                            onClick = {
-//                                //@TODO: Join to an event by code.
-//                                newComment = ""
-//                            }
-//                        ) {
-//                            Text(text = "Add")
+//                        // Your content here
+//                        albumImage.imageBitmap?.let {
+//                            Image(
+//                                bitmap = it,
+//                                contentDescription = "Selected Image",
+//                                modifier = Modifier.fillMaxSize(),
+//                                contentScale = ContentScale.Crop
+//                            )
 //                        }
 //                    }
-                    Button(onClick = {
-
-                    }) {
-                        Text("Show comments")
-                    }
-                }
-            }
-        }
-    }
+////                    Row(
+////                        modifier = Modifier.fillMaxWidth(),
+////                        verticalAlignment = Alignment.CenterVertically,
+////                        horizontalArrangement = Arrangement.Center
+////                    ) {
+////                        TextField(
+////                            modifier = Modifier.fillMaxWidth(0.4f),
+////                            value = newComment,
+////                            onValueChange = { newComment = it },
+////                            singleLine = true,
+////                            label = { Text("Add new comment") }
+////                        )
+////                        Spacer(modifier = Modifier.width(8.dp))
+////                        Button(
+////                            modifier = Modifier.fillMaxWidth(0.5f),
+////                            onClick = {
+////                                //@TODO: Join to an event by code.
+////                                newComment = ""
+////                            }
+////                        ) {
+////                            Text(text = "Add")
+////                        }
+////                    }
+//                    Button(onClick = {
+//
+//                    }) {
+//                        Text("Show comments")
+//                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AlbumImageDetailsDialogPreviewLightMode() = S5appTheme(darkTheme = false) {
-    AlbumImageDetailsDialog(albumImage = AlbumImage()) {
-
-    }
+//    AlbumImageDetailsDialog(albumImage = AlbumImage()) {
+//
+//    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
 fun AlbumImageDetailsDialogPreviewDarkMode() = S5appTheme(darkTheme = true) {
-    AlbumImageDetailsDialog(albumImage = AlbumImage()) {
-
-    }
+//    AlbumImageDetailsDialog(albumImage = AlbumImage()) {
+//
+//    }
 }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,14 +50,12 @@ import com.example.s5app.R
 import com.example.s5app.extension.getRawResourceUri
 import com.example.s5app.extension.toUri
 import com.example.s5app.navigation.AlbumImageDetailsScreen
+import com.example.s5app.network.GetGivenEventPhotoParams
+import com.example.s5app.network.GetGivenEventPhotosParams
 import com.example.s5app.ui.theme.S5appTheme
+import com.example.s5app.viewmodel.AlbumScreenViewModel
+import java.util.Base64
 
-class AlbumScreenViewModel : ViewModel() {
-    val images = mutableStateListOf(AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage(), AlbumImage())
-    fun addImage(imageBitmap: ImageBitmap? = null) {
-        images.add(AlbumImage(null, imageBitmap))
-    }
-}
 
 @Composable
 fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavController? = null, userToken: String, eventName: String) {
@@ -142,8 +141,12 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavContro
 }
 
 @Composable
-fun AlbumImageGridCell(albumImage: AlbumImage? = null, navController: NavController? = null) {
+fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null) {
     val context = LocalContext.current
+    // Decode the base64 string to a Bitmap
+    val decodedString = Base64.getDecoder().decode(albumImage.pixels)
+    val bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+    val imageBitmap: ImageBitmap = bitmap.asImageBitmap()
 //    val showDetailsDialog = remember { mutableStateOf(false) }
 //    when {
 //        showDetailsDialog.value -> {
@@ -162,30 +165,61 @@ fun AlbumImageGridCell(albumImage: AlbumImage? = null, navController: NavControl
             .size(100.dp)
             .clickable {
 //                showDetailsDialog.value = true
-                if (albumImage?.imageBitmap != null) {
-                    val bitmapUri = albumImage.imageBitmap!!
-                        .asAndroidBitmap()
-                        .toUri(context)
-                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
-                } else {
-                    val bitmapUri = getRawResourceUri(context, R.raw.noimg)
-                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
-                }
+//                if (albumImage?.imageBitmap != null) {
+//                    val bitmapUri = albumImage.imageBitmap!!
+//                        .asAndroidBitmap()
+//                        .toUri(context)
+//                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
+//                } else {
+//                    val bitmapUri = getRawResourceUri(context, R.raw.noimg)
+//                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
+//                }
+                // commented temporarily
+//                val bitmapUri = albumImage.imageBitmap!!
+//                    .asAndroidBitmap()
+//                    .toUri(context)
+//                navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
             }
     ) {
         // Your content here
-        albumImage?.imageBitmap?.let {
-            Image(
-                bitmap = it,
-                contentDescription = "Selected Image",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        }
+//        albumImage?.imageBitmap?.let {
+//            Image(
+//                bitmap = it,
+//                contentDescription = "Selected Image",
+//                modifier = Modifier.fillMaxSize(),
+//                contentScale = ContentScale.Crop
+//            )
+//        }
+        Image(
+            bitmap = imageBitmap,
+            contentDescription = albumImage.description,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            contentScale = ContentScale.Crop
+        )
     }
 }
 
-data class AlbumImage(var id: Long? = null, var imageBitmap: ImageBitmap? = null)
+data class AlbumImage(
+    val imageId: String,
+    val width: Int,
+    val height: Int,
+    val description: String,
+    val pixels: String
+) {
+    companion object {
+        fun fromGetGivenEventPhotoParam(
+            params: GetGivenEventPhotoParams
+        ) = AlbumImage(
+            imageId = params.imageId,
+            width = params.width,
+            height = params.height,
+            description = params.description,
+            pixels = params.pixels
+        )
+    }
+}
 
 @Composable
 fun AddImageGridCell(vm: AlbumScreenViewModel) {

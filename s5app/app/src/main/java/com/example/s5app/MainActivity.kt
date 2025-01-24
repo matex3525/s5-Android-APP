@@ -105,7 +105,7 @@ fun MainActivityScreen(startDestination: Any) {
             modifier = Modifier.padding(it)
         ) {
             composable<MainScreen> {
-                MainScreen(viewModel(), navController)
+                MainScreen(navController = navController)
             }
             composable<AlbumScreen> {
                 val args = it.toRoute<AlbumScreen>()
@@ -114,7 +114,7 @@ fun MainActivityScreen(startDestination: Any) {
             composable<AlbumImageDetailsScreen> {
                 val args = it.toRoute<AlbumImageDetailsScreen>()
                 val uri = Uri.parse(args.imageByteArray)
-                AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
+                //AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
             }
         }
     }

@@ -20,6 +20,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,17 +33,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.s5app.dialog.CupidAlertDialog
+import com.example.s5app.event.MainScreenEvent
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.network.ApiResult
+import com.example.s5app.network.CreateEventParams
+import com.example.s5app.network.GetEventParams
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.viewmodel.MainScreenViewModel
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavController? = null) {
+fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavController? = null) {
     var joinCodeText by remember { mutableStateOf("") }
     var eventNameText by remember { mutableStateOf("") }
     var isAlbumListEmpty by remember { mutableStateOf(true) }
@@ -53,6 +59,31 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
     val dialogText = remember { mutableStateOf("") }
 
     val coroutineScopeMainScreen = rememberCoroutineScope()
+
+    val getEventResponse by vm.getEventResponse.collectAsStateWithLifecycle()
+    val createEventResponse by vm.createEventResponse.collectAsStateWithLifecycle()
+
+    LaunchedEffect(getEventResponse) {
+        if (getEventResponse is ApiResult.Success) {
+            navController?.navigate(AlbumScreen(joinCodeText, (getEventResponse as ApiResult.Success).data.eventName))
+            vm.onEvent(MainScreenEvent.ClearCurrentEventToken)
+        } else if (getEventResponse is ApiResult.Error) {
+            dialogTitle.value = "Error"
+            dialogText.value = (getEventResponse as ApiResult.Error).message
+            showDialog.value = true
+        }
+    }
+
+    LaunchedEffect(createEventResponse) {
+        if (createEventResponse is ApiResult.Success) {
+            navController?.navigate(AlbumScreen((createEventResponse as ApiResult.Success<CreateEventParams>).data.userToken, eventNameText))
+            vm.onEvent(MainScreenEvent.ClearPreviouslyCreatedEventName)
+        } else if (createEventResponse is ApiResult.Error) {
+            dialogTitle.value = "Error"
+            dialogText.value = (createEventResponse as ApiResult.Error).message
+            showDialog.value = true
+        }
+    }
 
     CupidAlertDialog(dialogTitle = dialogTitle.value, dialogText = dialogText.value, showDialog = showDialog.value) {
         showDialog.value = false // Zamknij dialog
@@ -101,14 +132,7 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
                                 modifier = Modifier.fillMaxWidth(0.5f),
                                 onClick = {
                                     coroutineScopeMainScreen.launch {
-                                        val result = vm.getEvent(joinCodeText)
-                                        if (result is ApiResult.Success) {
-                                            navController?.navigate(AlbumScreen(joinCodeText, result.data.eventName))
-                                        } else {
-                                            dialogTitle.value = "Error"
-                                            dialogText.value = (result as ApiResult.Error).message
-                                            showDialog.value = true
-                                        }
+                                        vm.onEvent(MainScreenEvent.GetEvent(joinCodeText))
                                     }
                                 }
                             ) {
@@ -121,14 +145,7 @@ fun MainScreen(vm: MainScreenViewModel = viewModel(), navController: NavControll
                             Button(
                                 onClick = {
                                     coroutineScopeMainScreen.launch {
-                                        val result = vm.createEvent(eventNameText)
-                                        if (result is ApiResult.Success) {
-                                            navController?.navigate(AlbumScreen(result.data.userToken, eventNameText))
-                                        } else {
-                                            dialogTitle.value = "Error"
-                                            dialogText.value = (result as ApiResult.Error).message
-                                            showDialog.value = true
-                                        }
+                                        vm.onEvent(MainScreenEvent.CreateEvent(eventNameText))
                                     }
                                 }
                             ) {

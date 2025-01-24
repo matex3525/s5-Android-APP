@@ -22,6 +22,14 @@ interface CupidApiService {
 
     @GET("v0/event/{user_token}")
     suspend fun getEvent(@Path("user_token") userToken: String): ApiResponse<GetEventParams>
+    @GET("/v0/event/{user_token}/image/byindices/{first_image_index}/{last_image_index}")
+    suspend fun getPhotosForGivenEvent(@Path("user_token") userToken: String, @Path("first_image_index") firstImageIndex: Int, @Path("last_image_index") lastImageIndex: Int): ApiResponse<GetGivenEventPhotosParams>
+}
+
+interface CupidApiRepository {
+    suspend fun createEvent(eventName: String): ApiResult<CreateEventParams>
+    suspend fun getEvent(userToken: String): ApiResult<GetEventParams>
+//    suspend fun getPhotosForGivenEvent(userToken: String, firstImageIndex: Int, lastImageIndex: Int): ApiResult<GetGivenEventPhotosParams>
 }
 
 object CupidApi {
@@ -34,6 +42,7 @@ object CupidApi {
 sealed class ApiResult<out T> {
     data class Success<out T>(val data: T) : ApiResult<T>()
     data class Error(val message: String) : ApiResult<Nothing>()
+    object Init : ApiResult<Nothing>()
 }
 
 @Serializable
