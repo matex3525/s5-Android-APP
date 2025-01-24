@@ -20,6 +20,8 @@ Jeśli ``"success"`` = false, ``"params"`` zawiera kod błędu:<br>
 6 - Niepoprawna wysokość obrazka
 7 - Niepoprawny indeks obrazka
 8 - Niepoprawny indeks komentarza
+9 - Niepoprawne ID albumu
+10 - Niepoprawny indeks albumu
 </pre>
 
 ### ``/v0/event`` (POST)
