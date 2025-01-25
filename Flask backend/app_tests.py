@@ -69,19 +69,22 @@ def flatten_list_of_iterables(data):
     return [y for x in data for y in x]
 
 def endpoint_add_image(name: str,*args: str):
-    if len(args) != 2:
-        raise Exception(f"Syntax: {name} (user_token) (image_file_path)")
+    if len(args) != 2 and len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (image_file_path) {{album_id}}")
     with Image.open(args[1]) as file:
         if file.mode != "RGB" and file.mode != "RGBA":
             raise Exception("Only RGB and RGBA files are supported.")
         pixels = bytearray(flatten_list_of_iterables([(pixel[0],pixel[1],pixel[2],pixel[3] if len(pixel) >= 4 else 255) for pixel in file.getdata()]))
-        pixelString = base64.b64encode(pixels).decode("utf-8")
-        make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/image",{
+        pixel_string = base64.b64encode(pixels).decode("utf-8")
+        json_object = {
             "width": file.width,
             "height": file.height,
             "description": "(description)",
-            "pixels": pixelString
-        })
+            "pixels": pixel_string
+        }
+        if len(args) == 3:
+            json_object["album_id"] = str(args[2])
+        make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/image",json_object)
 
 def endpoint_delete_image(name: str,*args: str):
     if len(args) != 3:
@@ -205,6 +208,51 @@ def endpoint_get_image_comments_by_indices(name: str,*args: str):
         raise Exception(f"Syntax: {name} (user_token) (image_id) (first_comment_index) (last_comment_index)")
     make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byindices/{args[2]}/{args[3]}",{})
 
+def endpoint_create_album(name: str,*args: str):
+    if len(args) != 2:
+        raise Exception(f"Syntax: {name} (user_token) (name)")
+    make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/album",{"name": str(args[1])})
+
+def endpoint_delete_album_by_id(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (admin_token) (album_id)")
+    make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}/album/byid/{args[2]}",{"admin_token": str(args[1])})
+
+def endpoint_get_albums_by_indices(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (first_album_index: int) (last_album_index: int)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byindices/{int(args[1])}/{int(args[2])}",{})
+
+def endpoint_get_album_by_index(name: str,*args: str):
+    if len(args) != 2:
+        raise Exception(f"Syntax: {name} (user_token) (album_index: int)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byindex/{args[1]}",{})
+
+def endpoint_get_album_by_id(name: str,*args: str):
+    if len(args) != 2:
+        raise Exception(f"Syntax: {name} (user_token) (album_id)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}",{})
+
+def endpoint_get_album_image_ids(name: str,*args: str):
+    if len(args) != 4:
+        raise Exception(f"Syntax: {name} (user_token) (album_id) (first_image_index: int) (last_image_index: int)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imageids/{int(args[2])}/{int(args[3])}",{})
+
+def endpoint_get_album_image_count(name: str,*args: str):
+    if len(args) != 2:
+        raise Exception(f"Syntax: {name} (user_token) (album_id)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imagecount",{})
+
+def endpoint_get_album_image_by_index(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (album_id) (image_index: int)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/image/byindex/{int(args[2])}",{})
+
+def endpoint_get_album_image_thumb_by_index(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (album_id) (image_index: int)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[2]}/album/byid/{args[1]}/imagethumbs/byindex/{int(args[2])}",{})
+
 all_commands = {
     "create_event": endpoint_create_event,
     "delete_event": endpoint_delete_event,
@@ -227,6 +275,15 @@ all_commands = {
     "comment_by_index": endpoint_get_image_comment_by_index,
     "comment_by_id": endpoint_get_image_comment_by_id,
     "comments_by_indices": endpoint_get_image_comments_by_indices,
+    "create_album": endpoint_create_album,
+    "delete_album": endpoint_delete_album_by_id,
+    "albums_by_indices": endpoint_get_albums_by_indices,
+    "album_by_index": endpoint_get_album_by_index,
+    "album_by_id": endpoint_get_album_by_id,
+    "album_image_ids": endpoint_get_album_image_ids,
+    "album_image_count": endpoint_get_album_image_count,
+    "album_image_by_index": endpoint_get_album_image_by_index,
+    "album_image_thumb_by_index": endpoint_get_album_image_thumb_by_index,
     "exit": cmd_exit,
     "help": cmd_help
 }

@@ -18,6 +18,8 @@ class ErrorCode:
     ImageHeightInvalid = 6
     InvalidImageIndex = 7
     InvalidCommentIndex = 8
+    IncorrectAlbumId = 9
+    InvalidAlbumIndex = 10
 
 def success(value):
     return {"success": True,"params": value},200
@@ -36,6 +38,18 @@ def image_comment_id_list_name(user_token: str,image_id: str):
 
 def image_comment_stream_name(user_token: str,image_id: str):
     return f"{user_token}_{image_id}_c"
+
+def album_id_list_name(user_token: str):
+    return f"{user_token}_aid"
+
+def album_stream_name(user_token: str):
+    return f"{user_token}_a"
+
+def album_image_id_list_name(user_token: str,album_id: str):
+    return f"{user_token}_{album_id}_iid"
+
+#def album_image_comment_stream_name(user_token: str,album_id: str):
+#    return f"{user_token}_{album_id}_i"
 
 #@TODO: User provided strings should be filtered in some way to at least prevent basic swears or bad phrases.
 def filter_user_string(string: str) -> bool:
@@ -102,10 +116,15 @@ def endpoint_delete_event(user_token: str):
         return error(ErrorCode.IncorrectAdminToken)
 
     image_stream = database.xrange(image_stream_name(user_token),"0-0","+")
+    album_stream = database.xrange(album_stream_name(user_token),"0-0","+")
     transaction = database.pipeline()
     for image_id,_ in image_stream:
         transaction.ltrim(image_comment_id_list_name(user_token,image_id),0,-1)
         transaction.xtrim(image_comment_stream_name(user_token,image_id),minid = "0-0")
+    for album_id,_ in album_stream:
+        transaction.ltrim(album_image_id_list_name(user_token,album_id),0,-1)
+    transaction.ltrim(album_id_list_name(user_token),0,-1)
+    transaction.xtrim(album_stream_name(user_token),minid = "0-0")
     transaction.ltrim(image_id_list_name(user_token),0,-1)
     transaction.xtrim(image_stream_name(user_token),minid = "0-0")
     transaction.hdel("event_names",user_token)
@@ -189,6 +208,12 @@ def endpoint_add_image(user_token: str):
         return error(ErrorCode.InternalError)
     pixels = str(request.json["pixels"])
 
+    album_id: str | None = None
+    if "album_id" in request.json:
+        album_id = str(request.json["album_id"])
+        if album_id not in database.lrange(album_id_list_name(user_token),0,-1):
+            return error(ErrorCode.InvalidAlbumIndex)
+
     thumb_width = 256 if width > 256 else width
     thumb_height = int(thumb_width * (height / width))
     thumb_pixels = generate_image_thumb(pixels,width,height,thumb_width,thumb_height)
@@ -208,7 +233,11 @@ def endpoint_add_image(user_token: str):
     })
     #@TODO: Does this make any sense?
     try:
-        database.lpush(list_name,image_id)
+        transaction = database.pipeline()
+        transaction.lpush(list_name,image_id)
+        if album_id is not None:
+            transaction.lpush(album_image_id_list_name(user_token,album_id),image_id)
+        transaction.execute()
     except:
         database.xdel(stream_name,image_id)
         raise
@@ -225,9 +254,17 @@ def endpoint_delete_image(user_token: str,image_id: str):
     if not is_admin_token_valid(user_token,admin_token):
         return error(ErrorCode.IncorrectAdminToken)
 
+    current_album_id = None
+    for album_id in database.lrange(album_id_list_name(user_token),0,-1):
+        if image_id in database.lrange(album_image_id_list_name(user_token,album_id),0,-1):
+            current_album_id = album_id
+            break
+
     transaction = database.pipeline()
     transaction.ltrim(image_comment_id_list_name(user_token,image_id),0,-1)
     transaction.xtrim(image_comment_stream_name(user_token,image_id),minid = "0-0")
+    if current_album_id is not None:
+        transaction.lrem(album_image_id_list_name(user_token,current_album_id),0,image_id)
     transaction.lrem(image_id_list_name(user_token),0,image_id)
     transaction.xdel(image_stream_name(user_token),image_id)
     transaction.execute()
@@ -253,7 +290,7 @@ def get_images_by_ids(*,user_token: str,start_image_id: str,count: int | None,is
 def endpoint_get_image_by_index(user_token: str,image_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-    image_id = database.lindex(image_id_list_name(user_token),image_index)
+    image_id = database.lindex(image_id_list_name(user_token),int(image_index))
     if image_id is None: return error(ErrorCode.InvalidImageIndex)
     return endpoint_get_image_by_id(user_token,str(image_id))
 
@@ -292,7 +329,7 @@ def endpoint_get_images_by_indices(user_token: str,first_image_index: str,last_i
 def endpoint_get_image_thumb_by_index(user_token: str,image_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-    image_id = database.lindex(image_id_list_name(user_token),image_index)
+    image_id = database.lindex(image_id_list_name(user_token),int(image_index))
     if image_id is None: return error(ErrorCode.InvalidImageIndex)
     return endpoint_get_image_thumb_by_id(user_token,str(image_id))
 
@@ -400,7 +437,7 @@ def get_image_comment_by_id(user_token: str,image_id: str,comment_id: str):
 def endpoint_get_image_comment_by_index(user_token: str,image_id: str,comment_index: str):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
-    comment_id = database.lindex(image_comment_id_list_name(user_token,image_id),comment_index)
+    comment_id = database.lindex(image_comment_id_list_name(user_token,image_id),int(comment_index))
     if comment_id is None:
         return error(ErrorCode.InvalidCommentIndex)
     return endpoint_get_image_comment_by_id(user_token,image_id,str(comment_id))
@@ -441,3 +478,156 @@ def endpoint_get_image_comments_by_indices(user_token: str,image_id: str,first_c
             if data is None: continue
             comment_datas.append(data)
         return success(comment_datas)
+
+################################################################
+#                     ENDPOINTS (ALBUMS)                       #
+################################################################
+
+@app.post("/v0/event/<user_token>/album")
+def endpoint_create_album(user_token: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+
+    if "name" not in request.json:
+        return error(ErrorCode.InternalError)
+    album_name = str(request.json["name"])
+    if len(album_name) > 512:
+        return error(ErrorCode.StringTooLong)
+    if not filter_user_string(album_name):
+        return error(ErrorCode.StringFailedFiltering)
+
+    album_time = time.time_ns() // 1000000
+    stream_name = album_stream_name(user_token)
+    list_name = album_id_list_name(user_token)
+    album_id = database.xadd(stream_name,{
+        "name": album_name,
+        "time": album_time
+    })
+    #@TODO: Does this make any sense?
+    try:
+        database.lpush(list_name,album_id)
+    except:
+        database.xdel(stream_name,album_id)
+        raise
+    return success({"album_id": album_id,"time": album_time})
+
+@app.delete("/v0/event/<user_token>/album/byid/<album_id>")
+def endpoint_delete_album_by_id(user_token: str,album_id: str):
+    if "admin_token" not in request.json:
+        return error(ErrorCode.InternalError)
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+
+    admin_token = str(request.json["admin_token"])
+    if not is_admin_token_valid(user_token,admin_token):
+        return error(ErrorCode.IncorrectAdminToken)
+
+    transaction = database.pipeline()
+    transaction.ltrim(album_image_id_list_name(user_token,album_id),0,-1)
+    transaction.lrem(album_id_list_name(user_token),0,album_id)
+    transaction.xdel(album_stream_name(user_token),album_id)
+    transaction.execute()
+    return success({})
+
+def get_albums_by_ids(*,user_token: str,start_album_id: str,count: int | None):
+    stream = database.xrange(album_stream_name(user_token),start_album_id,"+",count)
+    result = []
+    for identifier,attributes in stream:
+        image_count = database.llen(album_image_id_list_name(user_token,identifier))
+        if image_count is None: image_count = 0
+        result.append({
+            "album_id": identifier,
+            "name": attributes["name"],
+            "image_count": int(image_count),
+            "time": int(attributes["time"])
+        })
+    return result
+
+@app.get("/v0/event/<user_token>/album/byindices/<first_album_index>/<last_album_index>")
+def endpoint_get_albums_by_indices(user_token: str,first_album_index: str,last_album_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    first_album_index = int(first_album_index)
+    last_album_index = int(last_album_index)
+
+    if first_album_index == 0 and last_album_index == -1:
+        data = get_albums_by_ids(user_token = user_token,start_album_id = "0-0",count = None)
+        return success(data)
+    if first_album_index < 0 or last_album_index < 0:
+        return error(ErrorCode.InvalidAlbumIndex)
+
+    result = []
+    album_ids = database.lrange(album_id_list_name(user_token),first_album_index,last_album_index)
+    for album_id in album_ids:
+        data = get_albums_by_ids(user_token = user_token,start_album_id = str(album_id),count = 1)
+        result.extend(data)
+    return success(result)
+
+@app.get("/v0/event/<user_token>/album/byindex/<album_index>")
+def endpoint_get_album_by_index(user_token: str,album_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    album_id = database.lindex(album_id_list_name(user_token),int(album_index))
+    if album_id is None: return error(ErrorCode.InvalidAlbumIndex)
+    return endpoint_get_album_by_id(user_token,str(album_id))
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>")
+def endpoint_get_album_by_id(user_token: str,album_id: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    data = get_albums_by_ids(user_token = user_token,start_album_id = str(album_id),count = 1)
+    return success(data)
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>/imageids/<first_image_index>/<last_image_index>")
+def endpoint_get_album_image_ids(user_token: str,album_id: str,first_image_index: str,last_image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    first_image_index = int(first_image_index)
+    last_image_index = int(last_image_index)
+
+    if album_id not in database.lrange(album_id_list_name(user_token),0,-1):
+        return error(ErrorCode.IncorrectAlbumId)
+
+    if first_image_index == 0 and last_image_index == -1:
+        result = database.lrange(album_image_id_list_name(user_token,album_id),0,-1)
+        return success(result)
+    if first_image_index < 0 or last_image_index < 0:
+        return error(ErrorCode.InvalidImageIndex)
+
+    result = database.lrange(album_image_id_list_name(user_token,album_id),first_image_index,last_image_index)
+    return success(result)
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>/imagecount")
+def endpoint_get_album_image_count(user_token: str,album_id: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    if album_id not in database.lrange(album_id_list_name(user_token),0,-1):
+        return error(ErrorCode.IncorrectAlbumId)
+    length = database.llen(album_image_id_list_name(user_token,album_id))
+    if length is None:
+        return error(ErrorCode.InternalError)
+    return success(int(length))
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>/image/byindex/<image_index>")
+def endpoint_get_album_image_by_index(user_token: str,album_id: str,image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    image_index = int(image_index)
+    if image_index < 0:
+        return error(ErrorCode.InvalidImageIndex)
+    image_id = database.lindex(album_image_id_list_name(user_token,album_id),image_index)
+    if image_id is None:
+        return error(ErrorCode.InvalidImageIndex)
+    return endpoint_get_image_by_id(user_token,image_id)
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>/imagethumbs/byindex/<image_index>")
+def endpoint_get_album_image_thumb_by_index(user_token: str,album_id: str,image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    image_index = int(image_index)
+    if image_index < 0:
+        return error(ErrorCode.InvalidImageIndex)
+    image_id = database.lindex(album_image_id_list_name(user_token,album_id),image_index)
+    if image_id is None:
+        return error(ErrorCode.InvalidImageIndex)
+    return endpoint_get_image_thumb_by_id(user_token,image_id)
