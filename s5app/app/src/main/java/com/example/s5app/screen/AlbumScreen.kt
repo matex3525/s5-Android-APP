@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -58,8 +59,9 @@ import java.util.Base64
 
 
 @Composable
-fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavController? = null, userToken: String, eventName: String) {
+fun AlbumScreen(vm: AlbumScreenViewModel = hiltViewModel(), navController: NavController? = null, userToken: String, eventName: String) {
     var isUserTokenHidden by remember { mutableStateOf(true) }
+    val images = vm.images.value
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -117,11 +119,10 @@ fun AlbumScreen(vm: AlbumScreenViewModel = viewModel(), navController: NavContro
                 columns = GridCells.Fixed(3),
                 modifier = Modifier.fillMaxSize()
             ) {
-
                 item {
                     AddImageGridCell(vm)
                 }
-                items(vm.images) {item ->
+                items(images) {item ->
                     AlbumImageGridCell(item, navController)
                 }
             }

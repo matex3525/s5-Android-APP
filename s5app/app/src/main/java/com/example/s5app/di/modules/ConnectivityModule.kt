@@ -12,6 +12,7 @@ import com.example.s5app.network.CupidApiService
 import com.example.s5app.use_case.CreateEventUseCase
 import com.example.s5app.use_case.GetEventUseCase
 import com.example.s5app.use_case.EventUseCases
+import com.example.s5app.use_case.GetPhotosForGivenEventUseCase
 import dagger.hilt.android.qualifiers.ApplicationContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -57,7 +58,8 @@ object ConnectivityModule {
     fun provideEventUseCases(repository: CupidApiRepository): EventUseCases {
         return EventUseCases(
             getEvent = GetEventUseCase(repository),
-            createEvent = CreateEventUseCase(repository)
+            createEvent = CreateEventUseCase(repository),
+            getPhotosForGivenEvent = GetPhotosForGivenEventUseCase(repository)
         )
     }
 }

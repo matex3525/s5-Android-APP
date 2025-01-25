@@ -109,7 +109,7 @@ fun MainActivityScreen(startDestination: Any) {
             }
             composable<AlbumScreen> {
                 val args = it.toRoute<AlbumScreen>()
-                AlbumScreen(viewModel(), navController, args.userToken, args.eventName)
+                AlbumScreen(hiltViewModel(), navController, args.userToken, args.eventName)
             }
             composable<AlbumImageDetailsScreen> {
                 val args = it.toRoute<AlbumImageDetailsScreen>()

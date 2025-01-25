@@ -6,16 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.s5app.event.MainScreenEvent
 import com.example.s5app.network.ApiResult
 import com.example.s5app.network.CreateEventParams
-import com.example.s5app.network.CreateEventRequest
-import com.example.s5app.network.CupidApi
 import com.example.s5app.network.GetEventParams
 import com.example.s5app.use_case.EventUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.io.IOException
 import javax.inject.Inject
 
 @HiltViewModel
