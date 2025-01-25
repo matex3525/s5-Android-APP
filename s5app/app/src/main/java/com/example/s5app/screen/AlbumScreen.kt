@@ -204,8 +204,7 @@ fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = n
             bitmap = imageBitmap,
             contentDescription = albumImage.description,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
+                .fillMaxWidth(),
             contentScale = ContentScale.Crop
         )
     }
