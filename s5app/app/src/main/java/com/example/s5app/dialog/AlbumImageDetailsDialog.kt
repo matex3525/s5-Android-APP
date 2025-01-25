@@ -29,7 +29,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.s5app.screen.AlbumImage
+import com.example.s5app.model.AlbumImage
 import com.example.s5app.ui.theme.S5appTheme
 
 @Composable

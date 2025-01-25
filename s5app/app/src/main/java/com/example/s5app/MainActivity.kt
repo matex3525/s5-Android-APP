@@ -42,8 +42,6 @@ import com.example.s5app.extension.toBitmap
 import com.example.s5app.navigation.AlbumImageDetailsScreen
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.navigation.MainScreen
-import com.example.s5app.screen.AlbumImage
-import com.example.s5app.screen.AlbumImageDetailsScreen
 import com.example.s5app.screen.AlbumScreen
 import com.example.s5app.screen.MainScreen
 import com.example.s5app.ui.theme.S5appTheme
