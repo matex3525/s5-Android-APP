@@ -3,7 +3,6 @@ package com.example.s5app.network
 import com.google.gson.annotations.SerializedName
 
 data class GetGivenEventPhotosParams(
-    @SerializedName("params")
     val params: List<GetGivenEventPhotoParams>
 )
 

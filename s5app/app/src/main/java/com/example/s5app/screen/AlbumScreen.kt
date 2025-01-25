@@ -48,6 +48,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.s5app.R
+import com.example.s5app.event.AlbumScreenEvent
 import com.example.s5app.extension.getRawResourceUri
 import com.example.s5app.extension.toUri
 import com.example.s5app.navigation.AlbumImageDetailsScreen
@@ -59,7 +60,12 @@ import java.util.Base64
 
 
 @Composable
-fun AlbumScreen(vm: AlbumScreenViewModel = hiltViewModel(), navController: NavController? = null, userToken: String, eventName: String) {
+fun AlbumScreen(navController: NavController? = null, userToken: String, eventName: String) {
+    val vm: AlbumScreenViewModel = hiltViewModel(
+        creationCallback = { factory: AlbumScreenViewModel.AlbumScreenViewModelFactory ->
+            factory.create(userToken)
+        }
+    )
     var isUserTokenHidden by remember { mutableStateOf(true) }
     val images = vm.images.value
     Column(
@@ -120,10 +126,10 @@ fun AlbumScreen(vm: AlbumScreenViewModel = hiltViewModel(), navController: NavCo
                 modifier = Modifier.fillMaxSize()
             ) {
                 item {
-                    AddImageGridCell(vm)
+                    AddImageGridCell(vm, userToken)
                 }
                 items(images) {item ->
-                    AlbumImageGridCell(item, navController)
+                    AlbumImageGridCell(item, navController, vm)
                 }
             }
         }
@@ -133,7 +139,9 @@ fun AlbumScreen(vm: AlbumScreenViewModel = hiltViewModel(), navController: NavCo
                 .align(Alignment.CenterHorizontally)
         ) {
             Button(
-                onClick = { /* Do something */ },
+                onClick = {
+                    vm.onEvent(AlbumScreenEvent.GetAllPhotosForGivenEvent(userToken))
+                },
             ) {
                 Text("Export album")
             }
@@ -142,11 +150,12 @@ fun AlbumScreen(vm: AlbumScreenViewModel = hiltViewModel(), navController: NavCo
 }
 
 @Composable
-fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null) {
+fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null, viewModel: AlbumScreenViewModel) {
     val context = LocalContext.current
     // Decode the base64 string to a Bitmap
-    val decodedString = Base64.getDecoder().decode(albumImage.pixels)
-    val bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+//    val decodedString = Base64.getDecoder().decode(albumImage.pixels)
+//    val bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+    val bitmap = viewModel.base64ARGBToBitmap(albumImage.pixels, albumImage.width, albumImage.height)
     val imageBitmap: ImageBitmap = bitmap.asImageBitmap()
 //    val showDetailsDialog = remember { mutableStateOf(false) }
 //    when {
@@ -223,7 +232,7 @@ data class AlbumImage(
 }
 
 @Composable
-fun AddImageGridCell(vm: AlbumScreenViewModel) {
+fun AddImageGridCell(vm: AlbumScreenViewModel, userToken: String) {
     var imageBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -234,7 +243,7 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
         if (result.resultCode == Activity.RESULT_OK) {
             val bitmap = result.data?.extras?.get("data") as Bitmap
             imageBitmap = bitmap
-            vm.addImage(bitmap.asImageBitmap())
+            vm.onEvent(AlbumScreenEvent.AddPhotoToEvent(userToken, bitmap.asImageBitmap()))
         }
     }
 
@@ -296,11 +305,11 @@ fun AddImageGridCell(vm: AlbumScreenViewModel) {
 @Preview(showBackground = true,backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AlbumScreenPreviewLightMode() = S5appTheme(darkTheme = false) {
-    AlbumScreen(viewModel(), null, "event_0", "Test event")
+    AlbumScreen(null, "event_0", "Test event")
 }
 
 @Preview(showBackground = true,backgroundColor = 0xFF000000)
 @Composable
 fun AlbumScreenPreviewDarkMode() = S5appTheme(darkTheme = true) {
-    AlbumScreen(viewModel(), null, "event_0", "Test event")
+    AlbumScreen(null, "event_0", "Test event")
 }

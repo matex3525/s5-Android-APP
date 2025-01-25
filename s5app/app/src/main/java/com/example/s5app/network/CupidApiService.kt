@@ -12,9 +12,9 @@ interface CupidApiService {
     @GET("v0/event/{user_token}")
     suspend fun getEvent(@Path("user_token") userToken: String): ApiResponse<GetEventParams>
     @GET("/v0/event/{user_token}/image/byindices/{first_image_index}/{last_image_index}")
-    suspend fun getPhotosForGivenEvent(@Path("user_token") userToken: String, @Path("first_image_index") firstImageIndex: Int, @Path("last_image_index") lastImageIndex: Int): ApiResponse<GetGivenEventPhotosParams>
-//    @POST("/v0/event/{user_token}/image")
-//    suspend fun addPhotoToEvent(@Path("user_token") userToken: String, @Body request: AddPhotoToEventRequest): ApiResponse<AddPhotoToEventParams>
+    suspend fun getPhotosForGivenEvent(@Path("user_token") userToken: String, @Path("first_image_index") firstImageIndex: Int, @Path("last_image_index") lastImageIndex: Int): ApiResponse<List<GetGivenEventPhotoParams>>
+    @POST("/v0/event/{user_token}/image")
+    suspend fun addPhotoToEvent(@Path("user_token") userToken: String, @Body request: AddPhotoToEventRequest): ApiResponse<AddPhotoToEventParams>
 }
 
 // Typ wynikowy (Success/Error)
