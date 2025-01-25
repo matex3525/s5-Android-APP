@@ -51,10 +51,12 @@ import com.example.s5app.R
 import com.example.s5app.event.AlbumScreenEvent
 import com.example.s5app.extension.getRawResourceUri
 import com.example.s5app.extension.toUri
+import com.example.s5app.model.AlbumImage
 import com.example.s5app.navigation.AlbumImageDetailsScreen
 import com.example.s5app.network.GetGivenEventPhotoParams
 import com.example.s5app.network.GetGivenEventPhotosParams
 import com.example.s5app.ui.theme.S5appTheme
+import com.example.s5app.util.BitmapUtil.base64ARGBToBitmap
 import com.example.s5app.viewmodel.AlbumScreenViewModel
 import java.util.Base64
 
@@ -129,7 +131,7 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
                     AddImageGridCell(vm, userToken)
                 }
                 items(images) {item ->
-                    AlbumImageGridCell(item, navController, vm)
+                    AlbumImageGridCell(item, navController)
                 }
             }
         }
@@ -150,24 +152,12 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
 }
 
 @Composable
-fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null, viewModel: AlbumScreenViewModel) {
+fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null) {
     val context = LocalContext.current
-    // Decode the base64 string to a Bitmap
-//    val decodedString = Base64.getDecoder().decode(albumImage.pixels)
-//    val bitmap = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
-    val bitmap = viewModel.base64ARGBToBitmap(albumImage.pixels, albumImage.width, albumImage.height)
+
+    val bitmap = base64ARGBToBitmap(albumImage.pixels, albumImage.width, albumImage.height)
     val imageBitmap: ImageBitmap = bitmap.asImageBitmap()
-//    val showDetailsDialog = remember { mutableStateOf(false) }
-//    when {
-//        showDetailsDialog.value -> {
-////            if (albumImage != null) {
-////                AlbumImageDetailsDialog(albumImage) {
-////                    showDetailsDialog.value = false
-////                }
-////            }
-//
-//        }
-//    }
+
     Surface(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
@@ -210,25 +200,7 @@ fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = n
     }
 }
 
-data class AlbumImage(
-    val imageId: String,
-    val width: Int,
-    val height: Int,
-    val description: String,
-    val pixels: String
-) {
-    companion object {
-        fun fromGetGivenEventPhotoParam(
-            params: GetGivenEventPhotoParams
-        ) = AlbumImage(
-            imageId = params.imageId,
-            width = params.width,
-            height = params.height,
-            description = params.description,
-            pixels = params.pixels
-        )
-    }
-}
+
 
 @Composable
 fun AddImageGridCell(vm: AlbumScreenViewModel, userToken: String) {

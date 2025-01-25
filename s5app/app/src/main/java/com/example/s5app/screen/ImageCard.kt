@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import java.util.Base64
 import android.graphics.BitmapFactory
+import com.example.s5app.model.AlbumImage
 
 @Composable
 fun ImageCard(image: AlbumImage, modifier: Modifier = Modifier) {
