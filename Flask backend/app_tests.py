@@ -238,6 +238,21 @@ def endpoint_get_album_image_ids(name: str,*args: str):
         raise Exception(f"Syntax: {name} (user_token) (album_id) (first_image_index: int) (last_image_index: int)")
     make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imageids/{int(args[2])}/{int(args[3])}",{})
 
+def endpoint_get_album_image_count(name: str,*args: str):
+    if len(args) != 2:
+        raise Exception(f"Syntax: {name} (user_token) (album_id)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imagecount",{})
+
+def endpoint_get_album_image_by_index(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (album_id) (image_index: int)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/image/byindex/{int(args[2])}",{})
+
+def endpoint_get_album_image_thumb_by_index(name: str,*args: str):
+    if len(args) != 3:
+        raise Exception(f"Syntax: {name} (user_token) (album_id) (image_index: int)")
+    make_http_request(HttpMethod.Get,f"/v0/event/{args[2]}/album/byid/{args[1]}/imagethumbs/byindex/{int(args[2])}",{})
+
 all_commands = {
     "create_event": endpoint_create_event,
     "delete_event": endpoint_delete_event,
@@ -266,6 +281,9 @@ all_commands = {
     "album_by_index": endpoint_get_album_by_index,
     "album_by_id": endpoint_get_album_by_id,
     "album_image_ids": endpoint_get_album_image_ids,
+    "album_image_count": endpoint_get_album_image_count,
+    "album_image_by_index": endpoint_get_album_image_by_index,
+    "album_image_thumb_by_index": endpoint_get_album_image_thumb_by_index,
     "exit": cmd_exit,
     "help": cmd_help
 }

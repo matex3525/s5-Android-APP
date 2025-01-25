@@ -596,3 +596,38 @@ def endpoint_get_album_image_ids(user_token: str,album_id: str,first_image_index
 
     result = database.lrange(album_image_id_list_name(user_token,album_id),first_image_index,last_image_index)
     return success(result)
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>/imagecount")
+def endpoint_get_album_image_count(user_token: str,album_id: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    if album_id not in database.lrange(album_id_list_name(user_token),0,-1):
+        return error(ErrorCode.IncorrectAlbumId)
+    length = database.llen(album_image_id_list_name(user_token,album_id))
+    if length is None:
+        return error(ErrorCode.InternalError)
+    return success(int(length))
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>/image/byindex/<image_index>")
+def endpoint_get_album_image_by_index(user_token: str,album_id: str,image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    image_index = int(image_index)
+    if image_index < 0:
+        return error(ErrorCode.InvalidImageIndex)
+    image_id = database.lindex(album_image_id_list_name(user_token,album_id),image_index)
+    if image_id is None:
+        return error(ErrorCode.InvalidImageIndex)
+    return endpoint_get_image_by_id(user_token,image_id)
+
+@app.get("/v0/event/<user_token>/album/byid/<album_id>/imagethumbs/byindex/<image_index>")
+def endpoint_get_album_image_thumb_by_index(user_token: str,album_id: str,image_index: str):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+    image_index = int(image_index)
+    if image_index < 0:
+        return error(ErrorCode.InvalidImageIndex)
+    image_id = database.lindex(album_image_id_list_name(user_token,album_id),image_index)
+    if image_id is None:
+        return error(ErrorCode.InvalidImageIndex)
+    return endpoint_get_image_thumb_by_id(user_token,image_id)

@@ -416,3 +416,45 @@ Zwraca ID zdjęć przypisanych do albumu &lt;album_id&gt; o indeksach od &lt;fir
 	"params": ["ID zdjęcia 1","ID zdjęcia 2",...]
 }
 ```
+
+### ``/v0/event/<user_token>/album/byid/<album_id>/imagecount`` (GET)
+Zwraca ilość zdjęć przypisanych do albumu &lt;album_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": /*Ilość zdjęć*/
+}
+```
+
+### ``/v0/event/<user_token>/album/byid/<album_id>/image/byindex/<image_index>`` (GET)
+Zwraca dane zdjęcia o indeksie &lt;image_index&gt; przypisanego do albumu &lt;album_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"image_id": "ID zdjęcia",
+		"width": /*szerokość zdjęcia w pikselach*/,
+		"height": /*wysokość zdjęcia w pikselach*/,
+		"description": "opis zdjęcia",
+		"pixels": "piksele zdjęcia w formacie ARGB8888 zakodowane w Base64"
+	}]
+}
+```
+
+### ``/v0/event/<user_token>/album/byid/<album_id>/imagethumbs/byindex/<image_index>`` (GET)
+Zwraca dane ikony o indeksie &lt;image_index&gt; przypisanej do albumu &lt;album_id&gt; z wydarzenia &lt;user_token&gt;.
+#### Zwraca
+```json
+{
+	"success": true,
+	"params": [{
+		"image_id": "ID zdjęcia",
+		"width": /*szerokość ikony w pikselach*/,
+		"height": /*wysokość ikony w pikselach*/,
+		"description": "opis ikony",
+		"pixels": "piksele ikony w formacie ARGB8888 zakodowane w Base64"
+	}]
+}
+```
