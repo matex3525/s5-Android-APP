@@ -42,6 +42,7 @@ import com.example.s5app.extension.toBitmap
 import com.example.s5app.navigation.AlbumImageDetailsScreen
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.navigation.MainScreen
+import com.example.s5app.screen.AlbumImageDetailsScreen
 import com.example.s5app.screen.AlbumScreen
 import com.example.s5app.screen.MainScreen
 import com.example.s5app.ui.theme.S5appTheme
@@ -112,7 +113,7 @@ fun MainActivityScreen(startDestination: Any) {
             composable<AlbumImageDetailsScreen> {
                 val args = it.toRoute<AlbumImageDetailsScreen>()
                 val uri = Uri.parse(args.imageByteArray)
-                //AlbumImageDetailsScreen(AlbumImage(null, uri!!.toBitmap(context)?.asImageBitmap()))
+                AlbumImageDetailsScreen(uri!!.toBitmap(context)?.asImageBitmap()!!, args.userToken, args.imageId)
             }
         }
     }

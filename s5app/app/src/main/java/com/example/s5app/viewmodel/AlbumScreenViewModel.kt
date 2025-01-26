@@ -108,7 +108,7 @@ class AlbumScreenViewModel @AssistedInject constructor(
                     val result = eventUseCases.addPhotoToEvent(event.eventToken, imageData)
                     if (result is ApiResult.Success) {
                         withContext(Dispatchers.Main) {
-                            _images.add(AlbumImage("null", imageData.width, imageData.height, imageData.description, imageData.pixels))
+                            _images.add(AlbumImage(result.data.imageId, imageData.width, imageData.height, imageData.description, imageData.pixels))
                         }
                     }
                 }

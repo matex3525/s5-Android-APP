@@ -9,10 +9,12 @@ import com.example.s5app.network.ConnectivityService
 import com.example.s5app.network.CupidApiRepository
 import com.example.s5app.network.CupidApiRepositoryImpl
 import com.example.s5app.network.CupidApiService
+import com.example.s5app.use_case.AddCommentToPhotoUseCase
 import com.example.s5app.use_case.AddPhotoToEventUseCase
 import com.example.s5app.use_case.CreateEventUseCase
 import com.example.s5app.use_case.GetEventUseCase
 import com.example.s5app.use_case.EventUseCases
+import com.example.s5app.use_case.GetCommentsForGivenPhotoUseCase
 import com.example.s5app.use_case.GetPhotosForGivenEventUseCase
 import dagger.hilt.android.qualifiers.ApplicationContext
 import retrofit2.Retrofit
@@ -61,7 +63,9 @@ object ConnectivityModule {
             getEvent = GetEventUseCase(repository),
             createEvent = CreateEventUseCase(repository),
             getPhotosForGivenEvent = GetPhotosForGivenEventUseCase(repository),
-            addPhotoToEvent = AddPhotoToEventUseCase(repository)
+            addPhotoToEvent = AddPhotoToEventUseCase(repository),
+            getCommentsForGivenPhoto = GetCommentsForGivenPhotoUseCase(repository),
+            addCommentToPhoto = AddCommentToPhotoUseCase(repository)
         )
     }
 }

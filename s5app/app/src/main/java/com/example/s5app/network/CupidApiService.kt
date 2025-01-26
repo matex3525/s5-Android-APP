@@ -15,6 +15,10 @@ interface CupidApiService {
     suspend fun getPhotosForGivenEvent(@Path("user_token") userToken: String, @Path("first_image_index") firstImageIndex: Int, @Path("last_image_index") lastImageIndex: Int): ApiResponse<List<GetGivenEventPhotoParams>>
     @POST("/v0/event/{user_token}/image")
     suspend fun addPhotoToEvent(@Path("user_token") userToken: String, @Body request: AddPhotoToEventRequest): ApiResponse<AddPhotoToEventParams>
+    @GET("/v0/event/{user_token}/image/byid/{image_id}/comment/byindices/{first_comment_index}/{last_comment_index}")
+    suspend fun getCommentsForGivenPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Path("first_comment_index") firstCommentIndex: Int, @Path("last_comment_index") lastCommentIndex: Int): ApiResponse<List<GetGivenPhotoCommentParams>>
+    @POST("/v0/event/{user_token}/image/byid/{image_id}/comment")
+    suspend fun addCommentToPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Body request: AddCommentToPhotoRequest): ApiResponse<AddCommentToPhotoParams>
 }
 
 // Typ wynikowy (Success/Error)

@@ -156,4 +156,83 @@ class CupidApiRepositoryImpl(
             ApiResult.Error("Unexpected failure: ${e.message}")
         }
     }
+
+    override suspend fun getCommentsForGivenPhoto(
+        userToken: String,
+        imageId: String,
+        firstCommentIndex: Int,
+        lastCommentIndex: Int
+    ): ApiResult<List<GetGivenPhotoCommentParams>> {
+        return try {
+            // Wysyłamy żądanie GET do API za pomocą Retrofit
+            val response = api.getCommentsForGivenPhoto(userToken, imageId, firstCommentIndex, lastCommentIndex)
+
+            // Sprawdzamy, czy operacja zakończyła się sukcesem
+            if (response.success) {
+                Log.d("CupidApi", "Success: ${response.success}, event: ${response.params}")
+
+                // Zwrócenie obiektu odpowiedzi w przypadku sukcesu
+                ApiResult.Success(response.params)
+            } else {
+                Log.e("CupidApi", "API failure: success=false")
+                ApiResult.Error("API failure: success=false")
+            }
+
+        } catch (e: IOException) {
+            // Obsługa błędów komunikacji (np. problemy z siecią)
+            Log.e("CupidApi", "Network failure: ${e.message}")
+            ApiResult.Error("Network failure: ${e.message}")
+        } catch (e: HttpException) {
+            // Obsługa błędów HTTP (np. 404, 401)
+            when (e.code()) {
+                401 -> Log.e("CupidApi", "Unauthorized: ${e.message()}")
+                404 -> Log.e("CupidApi", "Not Found: ${e.message()}")
+                else -> Log.e("CupidApi", "HTTP Error: ${e.code()}, ${e.message()}")
+            }
+            ApiResult.Error(e.message.toString())
+        } catch (e: Exception) {
+            // Obsługa innych wyjątków
+            Log.e("CupidApi", "Unexpected failure: ${e.message}")
+            ApiResult.Error("Unexpected failure: ${e.message}")
+        }
+    }
+
+    override suspend fun addCommentToPhoto(
+        userToken: String,
+        imageId: String,
+        request: AddCommentToPhotoRequest
+    ): ApiResult<AddCommentToPhotoParams> {
+        return try {
+            // Wysyłamy żądanie POST do API za pomocą Retrofit
+            val response = api.addCommentToPhoto(userToken, imageId, request)
+
+            // Sprawdzamy, czy operacja zakończyła się sukcesem
+            if (response.success) {
+                Log.d("CupidApi", "Success: ${response.success}, event: ${response.params}")
+
+                // Zwrócenie obiektu odpowiedzi w przypadku sukcesu
+                ApiResult.Success(response.params)
+            } else {
+                Log.e("CupidApi", "API failure: success=false")
+                ApiResult.Error("API failure: success=false")
+            }
+
+        } catch (e: IOException) {
+            // Obsługa błędów komunikacji (np. problemy z siecią)
+            Log.e("CupidApi", "Network failure: ${e.message}")
+            ApiResult.Error("Network failure: ${e.message}")
+        } catch (e: HttpException) {
+            // Obsługa błędów HTTP (np. 404, 401)
+            when (e.code()) {
+                401 -> Log.e("CupidApi", "Unauthorized: ${e.message()}")
+                404 -> Log.e("CupidApi", "Not Found: ${e.message()}")
+                else -> Log.e("CupidApi", "HTTP Error: ${e.code()}, ${e.message()}")
+            }
+            ApiResult.Error(e.message.toString())
+        } catch (e: Exception) {
+            // Obsługa innych wyjątków
+            Log.e("CupidApi", "Unexpected failure: ${e.message}")
+            ApiResult.Error("Unexpected failure: ${e.message}")
+        }
+    }
 }

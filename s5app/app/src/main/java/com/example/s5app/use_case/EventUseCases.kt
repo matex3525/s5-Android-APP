@@ -4,6 +4,8 @@ data class EventUseCases(
     val getEvent: GetEventUseCase,
     val createEvent: CreateEventUseCase,
     val getPhotosForGivenEvent: GetPhotosForGivenEventUseCase,
-    val addPhotoToEvent: AddPhotoToEventUseCase
+    val addPhotoToEvent: AddPhotoToEventUseCase,
+    val getCommentsForGivenPhoto: GetCommentsForGivenPhotoUseCase,
+    val addCommentToPhoto: AddCommentToPhotoUseCase
 )
 

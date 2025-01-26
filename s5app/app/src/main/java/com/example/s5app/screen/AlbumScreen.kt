@@ -131,7 +131,7 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
                     AddImageGridCell(vm, userToken)
                 }
                 items(images) {item ->
-                    AlbumImageGridCell(item, navController)
+                    AlbumImageGridCell(item, navController, userToken)
                 }
             }
         }
@@ -152,7 +152,7 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
 }
 
 @Composable
-fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null) {
+fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null, userToken: String) {
     val context = LocalContext.current
 
     val bitmap = base64ARGBToBitmap(albumImage.pixels, albumImage.width, albumImage.height)
@@ -164,21 +164,10 @@ fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = n
             .padding(16.dp)
             .size(100.dp)
             .clickable {
-//                showDetailsDialog.value = true
-//                if (albumImage?.imageBitmap != null) {
-//                    val bitmapUri = albumImage.imageBitmap!!
-//                        .asAndroidBitmap()
-//                        .toUri(context)
-//                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
-//                } else {
-//                    val bitmapUri = getRawResourceUri(context, R.raw.noimg)
-//                    navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
-//                }
-                // commented temporarily
-//                val bitmapUri = albumImage.imageBitmap!!
-//                    .asAndroidBitmap()
-//                    .toUri(context)
-//                navController?.navigate(AlbumImageDetailsScreen(imageByteArray = bitmapUri.toString()))
+                val bitmapUri = imageBitmap
+                    .asAndroidBitmap()
+                    .toUri(context)
+                navController?.navigate(AlbumImageDetailsScreen(bitmapUri.toString(), userToken, albumImage.imageId))
             }
     ) {
         // Your content here

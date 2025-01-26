@@ -13,5 +13,7 @@ data class AlbumScreen(
 
 @Serializable
 data class AlbumImageDetailsScreen(
-    val imageByteArray: String
+    val imageByteArray: String,
+    val userToken: String,
+    val imageId: String
 )
