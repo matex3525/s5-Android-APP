@@ -38,32 +38,32 @@ def cmd_help(name: str,*args: str):
 def endpoint_create_event(name: str,*args: str):
     if len(args) != 1:
         raise Exception(f"Syntax: {name} (event_name)")
-    make_http_request(HttpMethod.Post,"/v0/event",{"event_name": args[0]})
+    return make_http_request(HttpMethod.Post,"/v0/event",{"event_name": args[0]})
 
 def endpoint_delete_event(name: str,*args: str):
     if len(args) != 2:
         raise Exception(f"Syntax: {name} (user_token) (admin_token)")
-    make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}",{"admin_token": args[1]})
+    return make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}",{"admin_token": args[1]})
 
 def endpoint_get_event_data(name: str,*args: str):
     if len(args) != 1:
         raise Exception(f"Syntax: {name} (user_token)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}",{})
 
 def endpoint_auth_event(name: str,*args: str):
     if len(args) != 2:
         raise Exception(f"Syntax: {name} (user_token) (admin_token)")
-    make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/check",{"admin_token": args[1]})
+    return make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/check",{"admin_token": args[1]})
 
 def endpoint_get_image_count(name: str,*args: str):
     if len(args) != 1:
         raise Exception(f"Syntax: {name} (user_token)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/imagecount",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/imagecount",{})
 
 def endpoint_get_image_ids(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (first_index: int) (last_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/imageids/{int(args[1])}/{int(args[2])}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/imageids/{int(args[1])}/{int(args[2])}",{})
 
 def flatten_list_of_iterables(data):
     return [y for x in data for y in x]
@@ -84,14 +84,24 @@ def endpoint_add_image(name: str,*args: str):
         }
         if len(args) == 3:
             json_object["album_id"] = str(args[2])
-        make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/image",json_object)
+        return make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/image",json_object)
 
 def endpoint_delete_image(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (admin_token) (image_id)")
-    make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}/image/byid/{args[2]}",{"admin_token": args[1]})
+    return make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}/image/byid/{args[2]}",{"admin_token": args[1]})
 
 def print_image_response(response: dict):
+    if "image_id" not in response:
+        return
+    if "width" not in response:
+        return
+    if "height" not in response:
+        return
+    if "description" not in response:
+        return
+    if "pixels" not in response:
+        return
     data = {"image_id": response["image_id"],"width": int(response["width"]),"height": int(response["height"]),"description": response["description"],"pixels": f"({len(response["pixels"])} bytes in Base64)"}
     print(f"Response: {data}")
 
@@ -109,12 +119,18 @@ def endpoint_get_image_by_index(name: str,*args: str):
     if len(args) != 2 and len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (image_index: int) {{show_image: bool}}")
     response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byindex/{args[1]}",{},False)
-    if int(response["success"]) == 0:
-        raise Exception(f"Response: Error code: {response["params"]}")
-    image_response = response["params"][0]
-    print_image_response(image_response)
+    params = response["params"]
+    if isinstance(params,list):
+        if len(params) > 0:
+            image_response = params[0]
+            print_image_response(image_response)
+    return response
+
+def cmd_endpoint_get_image_by_index(name: str,*args: str):
+    response = endpoint_get_image_by_index(name,*args)
     if len(args) != 3: return
     if not check_value_is_bool(args[2]): return
+    image_response = response["params"][0]
     show_image_from_base64_encoded_pixels(image_response)
 
 def endpoint_get_image_by_id(name: str,*args: str):
@@ -176,82 +192,88 @@ def endpoint_get_image_thumbs_by_indices(name: str,*args: str):
 def endpoint_add_comment(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (image_id) (comment_text)")
-    make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment",{"text": args[2]})
+    return make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment",{"text": args[2]})
 
 def endpoint_get_image_comment_count(name: str,*args: str):
     if len(args) != 2:
         raise Exception(f"Syntax: {name} (user_token) (image_id)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid//{args[1]}/commentcount",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid//{args[1]}/commentcount",{})
 
 def endpoint_get_image_comment_ids(name: str,*args: str):
     if len(args) != 4:
         raise Exception(f"Syntax: {name} (user_token) (image_id) (first_index: int) (last_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/commentids/{args[2]}/{args[3]}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/commentids/{args[2]}/{args[3]}",{})
 
 def endpoint_delete_comment_by_id(name: str,*args: str):
     if len(args) != 4:
         raise Exception(f"Syntax: {name} (user_token) (admin_token) (image_id) (comment_id)")
-    make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}/image/byid/{args[2]}/comment/byid/{args[3]}",{"admin_token": args[1]})
+    return make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}/image/byid/{args[2]}/comment/byid/{args[3]}",{"admin_token": args[1]})
 
 def endpoint_get_image_comment_by_index(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (image_id) (comment_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byindex/{args[2]}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byindex/{args[2]}",{})
 
 def endpoint_get_image_comment_by_id(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (image_id) (comment_id)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byid/{args[2]}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byid/{args[2]}",{})
 
 def endpoint_get_image_comments_by_indices(name: str,*args: str):
     if len(args) != 4:
         raise Exception(f"Syntax: {name} (user_token) (image_id) (first_comment_index) (last_comment_index)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byindices/{args[2]}/{args[3]}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/image/byid/{args[1]}/comment/byindices/{args[2]}/{args[3]}",{})
 
 def endpoint_create_album(name: str,*args: str):
     if len(args) != 2:
         raise Exception(f"Syntax: {name} (user_token) (name)")
-    make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/album",{"name": str(args[1])})
+    return make_http_request(HttpMethod.Post,f"/v0/event/{args[0]}/album",{"name": str(args[1])})
 
 def endpoint_delete_album_by_id(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (admin_token) (album_id)")
-    make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}/album/byid/{args[2]}",{"admin_token": str(args[1])})
+    return make_http_request(HttpMethod.Delete,f"/v0/event/{args[0]}/album/byid/{args[2]}",{"admin_token": str(args[1])})
 
 def endpoint_get_albums_by_indices(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (first_album_index: int) (last_album_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byindices/{int(args[1])}/{int(args[2])}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byindices/{int(args[1])}/{int(args[2])}",{})
 
 def endpoint_get_album_by_index(name: str,*args: str):
     if len(args) != 2:
         raise Exception(f"Syntax: {name} (user_token) (album_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byindex/{args[1]}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byindex/{args[1]}",{})
 
 def endpoint_get_album_by_id(name: str,*args: str):
     if len(args) != 2:
         raise Exception(f"Syntax: {name} (user_token) (album_id)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}",{})
 
 def endpoint_get_album_image_ids(name: str,*args: str):
     if len(args) != 4:
         raise Exception(f"Syntax: {name} (user_token) (album_id) (first_image_index: int) (last_image_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imageids/{int(args[2])}/{int(args[3])}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imageids/{int(args[2])}/{int(args[3])}",{})
 
 def endpoint_get_album_image_count(name: str,*args: str):
     if len(args) != 2:
         raise Exception(f"Syntax: {name} (user_token) (album_id)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imagecount",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/imagecount",{})
 
 def endpoint_get_album_image_by_index(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (album_id) (image_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/image/byindex/{int(args[2])}",{})
+    response = make_http_request(HttpMethod.Get,f"/v0/event/{args[0]}/album/byid/{args[1]}/image/byindex/{int(args[2])}",{},False)
+    params = response["params"]
+    if isinstance(params,list):
+        if len(params) > 0:
+            image_response = params[0]
+            print_image_response(image_response)
+    return response
 
 def endpoint_get_album_image_thumb_by_index(name: str,*args: str):
     if len(args) != 3:
         raise Exception(f"Syntax: {name} (user_token) (album_id) (image_index: int)")
-    make_http_request(HttpMethod.Get,f"/v0/event/{args[2]}/album/byid/{args[1]}/imagethumbs/byindex/{int(args[2])}",{})
+    return make_http_request(HttpMethod.Get,f"/v0/event/{args[2]}/album/byid/{args[1]}/imagethumbs/byindex/{int(args[2])}",{})
 
 all_commands = {
     "create_event": endpoint_create_event,
@@ -262,7 +284,7 @@ all_commands = {
     "image_ids": endpoint_get_image_ids,
     "add_image": endpoint_add_image,
     "delete_image": endpoint_delete_image,
-    "image_by_index": endpoint_get_image_by_index,
+    "image_by_index": cmd_endpoint_get_image_by_index,
     "image_by_id": endpoint_get_image_by_id,
     "images_by_indices": endpoint_get_images_by_indices,
     "image_thumb_by_index": endpoint_get_image_thumb_by_index,
