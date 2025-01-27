@@ -88,10 +88,6 @@ def is_admin_token_valid(user_token: str, admin_token: str) -> bool:
     return database.hget("admin_tokens", user_token) == admin_token
 
 
-def flatten_list_of_iterables(data):
-    return [y for x in data for y in x]
-
-
 @app.errorhandler(werkzeug.exceptions.InternalServerError)
 def handle_internal_server_error(error):
     log_endpoint_error(str(error))
@@ -181,13 +177,13 @@ def endpoint_check_admin_token(user_token: str):
 #                     ENDPOINTS (IMAGES)                       #
 ################################################################
 
-def generate_image_thumb(base64_pixels: str, width: int, height: int, thumb_width: int, thumb_height: int) -> str:
-    pixels = base64.b64decode(base64_pixels.encode("utf-8"))
-    image = Image.frombytes(mode="RGBA", size=(width, height), data=pixels)
+def generate_image_thumb(base64_string: str, thumb_width: int, thumb_height: int) -> str:
+    image = Image.open(BytesIO(base64.b64decode(base64_string)))
     thumb_image = image.resize(size=(thumb_width, thumb_height))
-    thumb_pixels = bytearray(flatten_list_of_iterables(
-        [(pixel[0], pixel[1], pixel[2], pixel[3] if len(pixel) >= 4 else 255) for pixel in thumb_image.getdata()]))
-    return base64.b64encode(thumb_pixels).decode("utf-8")
+    buffered = BytesIO()
+    thumb_image.save(buffered, format="JPEG")
+    thumb_base64 = str(base64.b64encode(buffered.getvalue()))
+    return thumb_base64
 
 
 @app.get("/v0/event/<user_token>/imagecount")
@@ -247,7 +243,7 @@ def endpoint_add_image(user_token: str):
 
     thumb_width = 256 if width > 256 else width
     thumb_height = int(thumb_width * (height / width))
-    thumb_pixels = generate_image_thumb(pixels, width, height, thumb_width, thumb_height)
+    thumb_pixels = generate_image_thumb(pixels, thumb_width, thumb_height)
 
     image_time = time.time_ns() // 1000000
     stream_name = image_stream_name(user_token)
@@ -729,7 +725,6 @@ def PDF_from_pillow(images_PIL, album_title):
     c.drawCentredString(page_width / 2.0, page_height / 2.0, album_title)
     c.showPage()
 
-    # Add images with page numbers
     for i, image in enumerate(images_PIL):
         c.drawImage(image, inch, inch, width=page_width - 2 * inch, height=page_height - 2 * inch,
                     preserveAspectRatio=True, anchor='c')
