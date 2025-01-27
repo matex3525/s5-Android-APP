@@ -12,6 +12,7 @@ import com.example.s5app.network.CupidApiService
 import com.example.s5app.use_case.AddCommentToPhotoUseCase
 import com.example.s5app.use_case.AddPhotoToEventUseCase
 import com.example.s5app.use_case.CreateEventUseCase
+import com.example.s5app.use_case.DeleteCommentFromPhotoUseCase
 import com.example.s5app.use_case.GetEventUseCase
 import com.example.s5app.use_case.EventUseCases
 import com.example.s5app.use_case.GetCommentsForGivenPhotoUseCase
@@ -65,7 +66,8 @@ object ConnectivityModule {
             getPhotosForGivenEvent = GetPhotosForGivenEventUseCase(repository),
             addPhotoToEvent = AddPhotoToEventUseCase(repository),
             getCommentsForGivenPhoto = GetCommentsForGivenPhotoUseCase(repository),
-            addCommentToPhoto = AddCommentToPhotoUseCase(repository)
+            addCommentToPhoto = AddCommentToPhotoUseCase(repository),
+            deleteCommentFromPhoto = DeleteCommentFromPhotoUseCase(repository)
         )
     }
 }

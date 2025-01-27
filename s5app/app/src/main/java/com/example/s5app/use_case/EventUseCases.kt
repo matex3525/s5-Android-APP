@@ -6,6 +6,7 @@ data class EventUseCases(
     val getPhotosForGivenEvent: GetPhotosForGivenEventUseCase,
     val addPhotoToEvent: AddPhotoToEventUseCase,
     val getCommentsForGivenPhoto: GetCommentsForGivenPhotoUseCase,
-    val addCommentToPhoto: AddCommentToPhotoUseCase
+    val addCommentToPhoto: AddCommentToPhotoUseCase,
+    val deleteCommentFromPhoto: DeleteCommentFromPhotoUseCase
 )
 

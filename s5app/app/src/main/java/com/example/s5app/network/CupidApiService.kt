@@ -3,6 +3,7 @@ package com.example.s5app.network
 import retrofit2.http.Body
 import retrofit2.http.POST
 import kotlinx.serialization.Serializable
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -19,6 +20,8 @@ interface CupidApiService {
     suspend fun getCommentsForGivenPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Path("first_comment_index") firstCommentIndex: Int, @Path("last_comment_index") lastCommentIndex: Int): ApiResponse<List<GetGivenPhotoCommentParams>>
     @POST("/v0/event/{user_token}/image/byid/{image_id}/comment")
     suspend fun addCommentToPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Body request: AddCommentToPhotoRequest): ApiResponse<AddCommentToPhotoParams>
+    @DELETE("/v0/event/{user_token}/image/byid/{image_id}/comment/byid/{comment_id}")
+    suspend fun deleteCommentFromPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Path("comment_id") commentId: String, @Body request: DeleteCommentFromPhotoRequest): ApiResponse<Unit>
 }
 
 // Typ wynikowy (Success/Error)

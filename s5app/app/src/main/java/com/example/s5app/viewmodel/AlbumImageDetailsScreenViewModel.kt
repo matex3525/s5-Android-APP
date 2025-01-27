@@ -30,12 +30,13 @@ class AlbumImageDetailsScreenViewModel @AssistedInject constructor (
     private val eventUseCases: EventUseCases,
     @Assisted bitmapSource: ImageBitmap,
     @Assisted("userToken") private val userToken: String,
-    @Assisted("imageId") private val imageId: String
+    @Assisted("imageId") private val imageId: String,
+    @Assisted("adminToken") private val adminToken: String?
 ) : ViewModel() {
 
     @AssistedFactory
     interface AlbumImageDetailsScreenViewModelFactory {
-        fun create(bitmapSource: ImageBitmap, @Assisted("userToken") userToken: String, @Assisted("imageId") imageId: String): AlbumImageDetailsScreenViewModel
+        fun create(bitmapSource: ImageBitmap, @Assisted("userToken") userToken: String, @Assisted("imageId") imageId: String, @Assisted("adminToken") adminToken: String?): AlbumImageDetailsScreenViewModel
     }
 
     private val _bitmapSource = mutableStateOf(bitmapSource)
@@ -73,6 +74,17 @@ class AlbumImageDetailsScreenViewModel @AssistedInject constructor (
                         withContext(Dispatchers.Main) {
                             val data = result.data
                             _comments.add(ImageComment(data.commentId, event.comment, data.time))
+                        }
+                    }
+                }
+            }
+            is AlbumImageDetailsScreenEvent.DeleteComment -> {
+                viewModelScope.launch {
+                    if (adminToken == null) return@launch
+                    val result = eventUseCases.deleteCommentFromPhoto(userToken, imageId, event.commentId, adminToken)
+                    if (result is ApiResult.Success) {
+                        withContext(Dispatchers.Main) {
+                            _comments.removeIf {it.commentId == event.commentId}
                         }
                     }
                 }

@@ -1,6 +1,7 @@
 package com.example.s5app.screen
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -42,12 +43,13 @@ import java.util.Date
 fun AlbumImageDetailsScreen(
     imageBitmap: ImageBitmap,
     userToken: String,
-    imageId: String
+    imageId: String,
+    adminToken: String?
 ) {
     var newComment by remember { mutableStateOf("") }
     val vm: AlbumImageDetailsScreenViewModel = hiltViewModel(
         creationCallback = { factory: AlbumImageDetailsScreenViewModel.AlbumImageDetailsScreenViewModelFactory ->
-            factory.create(imageBitmap, userToken, imageId)
+            factory.create(imageBitmap, userToken, imageId, adminToken)
         }
     )
     val bitmapSource = vm.bitmapSource.value
@@ -109,19 +111,22 @@ fun AlbumImageDetailsScreen(
                 Spacer(modifier = Modifier.height(48.dp))
             }
             items(items = comments) { comment ->
-                AlbumImageDetailsCommentCell(comment = comment.text)
+                AlbumImageDetailsCommentCell(comment.text, comment.commentId, vm)
             }
         }
     }
 }
 
 @Composable
-fun AlbumImageDetailsCommentCell(comment: String) {
+fun AlbumImageDetailsCommentCell(comment: String, commentId: String, vm: AlbumImageDetailsScreenViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
-            .padding(top = 8.dp),
+            .padding(top = 8.dp)
+            .clickable {
+                vm.onEvent(AlbumImageDetailsScreenEvent.DeleteComment(commentId))
+            },
         shape = RectangleShape
     ) {
         Text(comment, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))

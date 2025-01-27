@@ -10,4 +10,5 @@ interface CupidApiRepository {
     suspend fun addPhotoToEvent(userToken: String, request: AddPhotoToEventRequest): ApiResult<AddPhotoToEventParams>
     suspend fun getCommentsForGivenPhoto(userToken: String, imageId: String, firstCommentIndex: Int, lastCommentIndex: Int): ApiResult<List<GetGivenPhotoCommentParams>>
     suspend fun addCommentToPhoto(userToken: String, imageId: String, request: AddCommentToPhotoRequest): ApiResult<AddCommentToPhotoParams>
+    suspend fun deleteCommentFromPhoto(userToken: String, imageId: String, commentId: String, adminToken: String): ApiResult<Unit>
 }
