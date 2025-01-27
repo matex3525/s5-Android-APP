@@ -243,7 +243,8 @@ def endpoint_add_image(user_token: str):
 
     thumb_width = 256 if width > 256 else width
     thumb_height = int(thumb_width * (height / width))
-    thumb_pixels = generate_image_thumb(pixels, thumb_width, thumb_height)
+    #thumb_pixels = generate_image_thumb(pixels, thumb_width, thumb_height)
+    thumb_pixels = "temp"
 
     image_time = time.time_ns() // 1000000
     stream_name = image_stream_name(user_token)
