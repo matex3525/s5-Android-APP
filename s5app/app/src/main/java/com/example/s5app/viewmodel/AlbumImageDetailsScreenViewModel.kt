@@ -81,11 +81,9 @@ class AlbumImageDetailsScreenViewModel @AssistedInject constructor (
             is AlbumImageDetailsScreenEvent.DeleteComment -> {
                 viewModelScope.launch {
                     if (adminToken == null) return@launch
-                    val result = eventUseCases.deleteCommentFromPhoto(userToken, imageId, event.commentId, adminToken)
-                    if (result is ApiResult.Success) {
-                        withContext(Dispatchers.Main) {
-                            _comments.removeIf {it.commentId == event.commentId}
-                        }
+                    eventUseCases.deleteCommentFromPhoto(userToken, imageId, event.commentId, adminToken)
+                    withContext(Dispatchers.Main) {
+                        _comments.removeIf {it.commentId == event.commentId}
                     }
                 }
             }

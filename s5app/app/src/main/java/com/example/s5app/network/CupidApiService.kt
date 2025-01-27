@@ -6,12 +6,15 @@ import kotlinx.serialization.Serializable
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface CupidApiService {
     @POST("/v0/event")
     suspend fun createEvent(@Body request: CreateEventRequest): ApiResponse<CreateEventParams>
     @GET("v0/event/{user_token}")
     suspend fun getEvent(@Path("user_token") userToken: String): ApiResponse<GetEventParams>
+    @POST("/v0/event/{user_token}/check")
+    suspend fun checkAdminTokenForEvent(@Path("user_token") userToken: String, @Body request: CheckAdminTokenForEventRequest): ApiResponse<CheckAdminTokenForEventParams>
     @GET("/v0/event/{user_token}/image/byindices/{first_image_index}/{last_image_index}")
     suspend fun getPhotosForGivenEvent(@Path("user_token") userToken: String, @Path("first_image_index") firstImageIndex: Int, @Path("last_image_index") lastImageIndex: Int): ApiResponse<List<GetGivenEventPhotoParams>>
     @POST("/v0/event/{user_token}/image")
@@ -21,7 +24,7 @@ interface CupidApiService {
     @POST("/v0/event/{user_token}/image/byid/{image_id}/comment")
     suspend fun addCommentToPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Body request: AddCommentToPhotoRequest): ApiResponse<AddCommentToPhotoParams>
     @DELETE("/v0/event/{user_token}/image/byid/{image_id}/comment/byid/{comment_id}")
-    suspend fun deleteCommentFromPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Path("comment_id") commentId: String, @Body request: DeleteCommentFromPhotoRequest): ApiResponse<Unit>
+    suspend fun deleteCommentFromPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Path("comment_id") commentId: String, @Query("admin_token") adminToken: String)
 }
 
 // Typ wynikowy (Success/Error)

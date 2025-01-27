@@ -108,12 +108,12 @@ fun MainActivityScreen(startDestination: Any) {
             }
             composable<AlbumScreen> {
                 val args = it.toRoute<AlbumScreen>()
-                AlbumScreen(navController, args.userToken, args.eventName)
+                AlbumScreen(navController, args.userToken, args.eventName, args.adminToken)
             }
             composable<AlbumImageDetailsScreen> {
                 val args = it.toRoute<AlbumImageDetailsScreen>()
                 val uri = Uri.parse(args.imageByteArray)
-                AlbumImageDetailsScreen(uri!!.toBitmap(context)?.asImageBitmap()!!, args.userToken, args.imageId, null)
+                AlbumImageDetailsScreen(uri!!.toBitmap(context)?.asImageBitmap()!!, args.userToken, args.imageId, args.adminToken)
             }
         }
     }

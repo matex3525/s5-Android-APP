@@ -8,12 +8,14 @@ object MainScreen
 @Serializable
 data class AlbumScreen(
     val userToken: String,
-    val eventName: String
+    val eventName: String,
+    val adminToken: String?
 )
 
 @Serializable
 data class AlbumImageDetailsScreen(
     val imageByteArray: String,
     val userToken: String,
-    val imageId: String
+    val imageId: String,
+    val adminToken: String?
 )

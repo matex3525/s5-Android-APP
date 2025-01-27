@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -35,21 +36,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.s5app.dialog.CupidAlertDialog
 import com.example.s5app.event.MainScreenEvent
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.network.ApiResult
 import com.example.s5app.network.CreateEventParams
-import com.example.s5app.network.GetEventParams
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.viewmodel.MainScreenViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavController? = null) {
-    var joinCodeText by remember { mutableStateOf("") }
+    var userTokenText by remember { mutableStateOf("") }
+    var adminTokenText by remember { mutableStateOf("") }
     var eventNameText by remember { mutableStateOf("") }
     var isAlbumListEmpty by remember { mutableStateOf(true) }
 
@@ -62,26 +62,39 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
 
     val getEventResponse by vm.getEventResponse.collectAsStateWithLifecycle()
     val createEventResponse by vm.createEventResponse.collectAsStateWithLifecycle()
+    val checkAdminTokenResponse by vm.checkAdminTokenResponse.collectAsStateWithLifecycle()
 
     LaunchedEffect(getEventResponse) {
         if (getEventResponse is ApiResult.Success) {
-            navController?.navigate(AlbumScreen(joinCodeText, (getEventResponse as ApiResult.Success).data.eventName))
+            navController?.navigate(AlbumScreen(userTokenText, (getEventResponse as ApiResult.Success).data.eventName, null))
             vm.onEvent(MainScreenEvent.ClearCurrentEventToken)
         } else if (getEventResponse is ApiResult.Error) {
             dialogTitle.value = "Error"
-            dialogText.value = (getEventResponse as ApiResult.Error).message
+            dialogText.value = "Wrong user token, try again."
             showDialog.value = true
         }
     }
 
     LaunchedEffect(createEventResponse) {
         if (createEventResponse is ApiResult.Success) {
-            navController?.navigate(AlbumScreen((createEventResponse as ApiResult.Success<CreateEventParams>).data.userToken, eventNameText))
+            navController?.navigate(AlbumScreen((createEventResponse as ApiResult.Success<CreateEventParams>).data.userToken, eventNameText, (createEventResponse as ApiResult.Success<CreateEventParams>).data.adminToken))
             vm.onEvent(MainScreenEvent.ClearPreviouslyCreatedEventName)
         } else if (createEventResponse is ApiResult.Error) {
             dialogTitle.value = "Error"
             dialogText.value = (createEventResponse as ApiResult.Error).message
             showDialog.value = true
+        }
+    }
+
+    LaunchedEffect(checkAdminTokenResponse) {
+        if (checkAdminTokenResponse is ApiResult.Success) {
+            navController?.navigate(AlbumScreen(userTokenText, (checkAdminTokenResponse as ApiResult.Success).data.eventName, adminTokenText))
+            vm.onEvent(MainScreenEvent.ClearCurrentAdminToken)
+        } else if (checkAdminTokenResponse is ApiResult.Error) {
+            dialogTitle.value = "Error"
+            dialogText.value = "Wrong admin or user token, try again."
+            showDialog.value = true
+            vm.onEvent(MainScreenEvent.ClearCurrentAdminToken)
         }
     }
 
@@ -104,7 +117,7 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
             ) {
                 Surface(
                     modifier = Modifier
-                        .height(250.dp)
+                        .wrapContentHeight()
                         .fillMaxWidth(fraction = 0.9f)
                         .align(Alignment.Center),
                     shape = RoundedCornerShape(24.dp)
@@ -114,6 +127,7 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(text = "Welcome to Cupid")
                         Spacer(modifier = Modifier.size(width = 0.dp,height = 12.dp))
                         Row(
@@ -121,18 +135,31 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center
                         ) {
-                            TextField(
-                                modifier = Modifier.fillMaxWidth(0.5f),
-                                value = joinCodeText,
-                                onValueChange = { joinCodeText = it },
-                                label = { Text("Join code") }
-                            )
+                            Column {
+                                TextField(
+                                    modifier = Modifier.fillMaxWidth(0.5f),
+                                    value = userTokenText,
+                                    onValueChange = { userTokenText = it },
+                                    label = { Text("User token") }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                TextField(
+                                    modifier = Modifier.fillMaxWidth(0.5f),
+                                    value = adminTokenText,
+                                    onValueChange = { adminTokenText = it },
+                                    label = { Text("Admin token") }
+                                )
+                            }
                             Spacer(modifier = Modifier.width(8.dp))
                             Button(
                                 modifier = Modifier.fillMaxWidth(0.5f),
                                 onClick = {
                                     coroutineScopeMainScreen.launch {
-                                        vm.onEvent(MainScreenEvent.GetEvent(joinCodeText))
+                                        if (adminTokenText.isNotEmpty()) {
+                                            vm.onEvent(MainScreenEvent.CheckAdminToken(userTokenText, adminTokenText))
+                                        } else {
+                                            vm.onEvent(MainScreenEvent.GetEvent(userTokenText))
+                                        }
                                     }
                                 }
                             ) {
@@ -151,6 +178,7 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                             ) {
                                 Text(text = "Create your first album")
                             }
+                            Spacer(modifier = Modifier.height(16.dp))
                         } else {
                             Button(
                                 onClick = {

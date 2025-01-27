@@ -62,13 +62,14 @@ import java.util.Base64
 
 
 @Composable
-fun AlbumScreen(navController: NavController? = null, userToken: String, eventName: String) {
+fun AlbumScreen(navController: NavController? = null, userToken: String, eventName: String, adminToken: String?) {
     val vm: AlbumScreenViewModel = hiltViewModel(
         creationCallback = { factory: AlbumScreenViewModel.AlbumScreenViewModelFactory ->
             factory.create(userToken)
         }
     )
     var isUserTokenHidden by remember { mutableStateOf(true) }
+    var isAdminTokenHidden by remember { mutableStateOf(true) }
     val images = vm.images.value
     Column(
         modifier = Modifier.fillMaxSize()
@@ -118,6 +119,34 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
                 }
             }
         }
+        if (adminToken != null) {
+            if (isAdminTokenHidden) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Button(
+                        onClick = { isAdminTokenHidden = false },
+                    ) {
+                        Text("Show admin token")
+                    }
+                }
+            } else {
+                Row(modifier = Modifier
+                    .padding(16.dp)
+                    .align(Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "Admin token: $adminToken")
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Button(
+                        onClick = { isAdminTokenHidden = true },
+                    ) {
+                        Text("Hide admin token")
+                    }
+                }
+            }
+        }
         Box(
             modifier = Modifier
                 .weight(1.0f)
@@ -131,7 +160,7 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
                     AddImageGridCell(vm, userToken)
                 }
                 items(images) {item ->
-                    AlbumImageGridCell(item, navController, userToken)
+                    AlbumImageGridCell(item, navController, userToken, adminToken)
                 }
             }
         }
@@ -152,7 +181,7 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
 }
 
 @Composable
-fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null, userToken: String) {
+fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null, userToken: String, adminToken: String? = null) {
     val context = LocalContext.current
 
     val bitmap = base64ARGBToBitmap(albumImage.pixels, albumImage.width, albumImage.height)
@@ -167,7 +196,7 @@ fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = n
                 val bitmapUri = imageBitmap
                     .asAndroidBitmap()
                     .toUri(context)
-                navController?.navigate(AlbumImageDetailsScreen(bitmapUri.toString(), userToken, albumImage.imageId))
+                navController?.navigate(AlbumImageDetailsScreen(bitmapUri.toString(), userToken, albumImage.imageId, adminToken))
             }
     ) {
         // Your content here
@@ -265,11 +294,11 @@ fun AddImageGridCell(vm: AlbumScreenViewModel, userToken: String) {
 @Preview(showBackground = true,backgroundColor = 0xFFFFFFFF)
 @Composable
 fun AlbumScreenPreviewLightMode() = S5appTheme(darkTheme = false) {
-    AlbumScreen(null, "event_0", "Test event")
+    AlbumScreen(null, "event_0", "Test event", "aaaa")
 }
 
 @Preview(showBackground = true,backgroundColor = 0xFF000000)
 @Composable
 fun AlbumScreenPreviewDarkMode() = S5appTheme(darkTheme = true) {
-    AlbumScreen(null, "event_0", "Test event")
+    AlbumScreen(null, "event_0", "Test event", "uiuu")
 }
