@@ -256,11 +256,17 @@ fun AddImageGridCell(vm: AlbumScreenViewModel, userToken: String) {
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         uri?.let {
-            val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, it)
-            imageBitmap = bitmap
-            vm.addImage(bitmap.asImageBitmap())
+            val source = ImageDecoder.createSource(context.contentResolver, it)
+            val decodedListener = ImageDecoder.OnHeaderDecodedListener { decoder, _, _ ->
+                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                decoder.isMutableRequired = true
+            }
+            val bitmap = ImageDecoder.decodeBitmap(source, decodedListener).asImageBitmap()
+            vm.onEvent(AlbumScreenEvent.AddPhotoToEvent(userToken, bitmap))
         }
     }
+
+
 
     Surface(
         shape = RoundedCornerShape(16.dp),
