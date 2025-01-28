@@ -802,3 +802,109 @@ def DOCX_from_pillow(images_PIL, title):
     doc.save(docx_buffer)
     docx_buffer.seek(0)
     return docx_buffer
+
+
+def HTMLstuff(image_list):
+    template = """<!DOCTYPE html>
+<html>
+<head>
+  <style>
+p {
+  height: 200px;
+  width: 500px;
+  margin: 100px auto;
+  position: relative;
+}
+
+img {
+  height: 150px;
+  position: absolute;
+  left: 0;
+  offset-path: path('m 0 50 q 50-30 100-30 t 100 30 100 0 100-30 100 30');
+  box-shadow: 1px 1px 3px #0008;
+  transition: transform .4s ease-out, offset-path .4s cubic-bezier(.77,-1.17,.75,.84),box-shadow .3s, z-index .3s;
+  z-index: 0;
+}
+
+img:hover {
+  transform: scale(3);
+  /* on hover, the path gets a bit shorter & flattened & shifted to left/bottom a bit for nicer movement */
+  offset-path: path('m 5 65 q 45-0 90-0 t 90 0 90 0 90-0 90 0');
+  box-shadow: 3px 4px 10px #0006;
+  /* ensures that image gets on top of stack at the start of "popping" animation
+     and gets back at the end of getting back. With smaller value, 2 different transitions would be needed */
+  z-index: 999;
+}
+
+/* 3 images */
+img:nth-last-child(3):first-child {
+  offset-distance: 17%;
+}
+img:nth-last-child(2):nth-child(2) {
+  offset-distance: 49%;
+}
+img:last-child:nth-child(3) {
+  offset-distance: 81%;
+}
+
+/* 4 images */
+img:nth-last-child(4):first-child {
+  offset-distance: 10%;
+}
+img:nth-last-child(3):nth-child(2) {
+  offset-distance: 35%;
+}
+img:nth-last-child(2):nth-child(3) {
+  offset-distance: 65%;
+}
+img:last-child:nth-child(4) {
+  offset-distance: 90%;
+}
+
+/* 5 images */
+img:nth-last-child(5):first-child {
+  offset-distance: 0%;
+}
+img:nth-last-child(4):nth-child(2) {
+  offset-distance: 25%;
+}
+img:nth-last-child(3):nth-child(3) {
+  offset-distance: 51%;
+}
+img:nth-last-child(2):nth-child(4) {
+  offset-distance: 75%;
+}
+img:last-child:nth-child(5) {
+  offset-distance: 100%;
+}
+</style>
+</head>
+<body>
+<p>
+"""
+
+    for i, image_b64 in enumerate(image_list):
+        template += f'''<img src="data:image/png;base64, {image_b64}">
+        '''
+        if i!=0 and i%4==0:
+            template+="""</p>
+            <p>
+            """
+    template+="""</p>
+        </body>
+        </html>"""
+    return template
+
+@app.get("/v0/event/<user_token>/HTML")
+def endpoint_create_pdf_album(user_token):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+
+    images_list = get_images_by_ids(user_token=user_token, start_image_id="-", count=None, is_thumb=False)
+    if len(images_list) == 0:
+        return error(ErrorCode.InternalError)
+
+    images_list = [image["pixels"] for image in images_list]
+    raw_html = HTMLstuff(images_list)
+    return Response(raw_html, mimetype='text/html')
+
