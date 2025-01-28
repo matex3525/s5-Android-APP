@@ -11,6 +11,8 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from io import BytesIO
+import docx
+from docx.shared import Inches, Cm
 
 
 class ErrorCode:
@@ -687,6 +689,7 @@ def endpoint_get_album_image_thumb_by_index(user_token: str, album_id: str, imag
         return error(ErrorCode.InvalidImageIndex)
     return endpoint_get_image_thumb_by_id(user_token, image_id)
 
+
 @app.get("/v0/event/<user_token>/PDF")
 def endpoint_create_pdf_album(user_token):
     images_list = get_images_by_ids(user_token=user_token, start_image_id="-", count=None, is_thumb=False)
@@ -737,4 +740,52 @@ def PDF_from_pillow(images_PIL, album_title):
     return pdf_buffer
 
 
+@app.get("/v0/event/<user_token>/DOCX")
+def endpoint_create_docx_album(user_token):
+    images_list = get_images_by_ids(user_token=user_token, start_image_id="-", count=None, is_thumb=False)
 
+    album_title = "Wedding album"
+    images_PIL = images_b64_to_pillow([(image["pixels"], image["width"], image["height"]) for image in images_list])
+
+    docx_buffer = DOCX_from_pillow(images_PIL, album_title)
+    return Response(
+        docx_buffer,
+        mimetype='application/docx',
+        headers={
+            'Content-Disposition': f'attachment; filename="{album_title}.pdf"'
+        }
+    )
+
+
+def add_image(doc, image_PIL, max_width=6.5, max_height=9.0):
+    width, height = image_PIL.size
+    aspect_ratio = width / height
+    if width / max_width > height / max_height:
+        new_width = max_width
+        new_height = max_width / aspect_ratio
+    else:
+        new_height = max_height
+        new_width = max_height * aspect_ratio
+    image_stream = BytesIO()
+    image_PIL.save(image_stream, format="JPEG")
+    image_stream.seek(0)
+
+    doc.add_picture(image_stream, width=Inches(new_width), height=Inches(new_height))
+
+
+def DOCX_from_pillow(images_PIL, title):
+    docx_buffer = BytesIO()
+
+    doc = docx.Document()
+    styles = doc.styles
+    styles['Heading 2'].font.color.rgb = docx.shared.RGBColor(0, 0, 0)
+    styles['Heading 2'].font.size = docx.shared.Pt(30)
+    p = doc.add_heading(title, level=2)
+    p.alignment = 1
+    for i, image_PIL in enumerate(images_PIL):
+        if i > 0:
+            doc.add_page_break()
+        add_image(doc, image_PIL)
+
+    doc.save(docx_buffer)
+    return docx_buffer
