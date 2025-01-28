@@ -48,6 +48,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.s5app.R
@@ -60,6 +61,7 @@ import com.example.s5app.network.GetGivenEventPhotoParams
 import com.example.s5app.network.GetGivenEventPhotosParams
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.util.BitmapUtil.base64ARGBToBitmap
+import com.example.s5app.util.PDFUtil
 import com.example.s5app.viewmodel.AlbumScreenViewModel
 import kotlinx.coroutines.launch
 import java.io.File
@@ -73,9 +75,22 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
             factory.create(userToken)
         }
     )
+    val context = LocalContext.current
     var isUserTokenHidden by remember { mutableStateOf(true) }
     var isAdminTokenHidden by remember { mutableStateOf(true) }
     val images = vm.images.value
+
+    val getPDFResponse = vm.getPDFResponse.collectAsStateWithLifecycle()
+
+    LaunchedEffect(getPDFResponse) {
+        getPDFResponse.value?.let {
+            val file = PDFUtil.savePDFFile(context, it, "event_photos")
+            file?.let {
+                PDFUtil.sharePdfFile(context, it)
+            }
+        }
+    }
+
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -176,7 +191,7 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
         ) {
             Button(
                 onClick = {
-                    vm.onEvent(AlbumScreenEvent.GetAllPhotosForGivenEvent(userToken))
+                    vm.onEvent(AlbumScreenEvent.GetPDFFileForEvent(userToken))
                 },
             ) {
                 Text("Export album")

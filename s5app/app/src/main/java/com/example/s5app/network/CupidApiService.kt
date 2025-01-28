@@ -25,6 +25,8 @@ interface CupidApiService {
     suspend fun addCommentToPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Body request: AddCommentToPhotoRequest): ApiResponse<AddCommentToPhotoParams>
     @DELETE("/v0/event/{user_token}/image/byid/{image_id}/comment/byid/{comment_id}")
     suspend fun deleteCommentFromPhoto(@Path("user_token") userToken: String, @Path("image_id") imageId: String, @Path("comment_id") commentId: String, @Query("admin_token") adminToken: String)
+    @GET("/v0/event/{user_token}/PDF")
+    suspend fun getPDFForEvent(@Path("user_token") userToken: String): ByteArray
 }
 
 // Typ wynikowy (Success/Error)

@@ -8,6 +8,7 @@ data class EventUseCases(
     val addPhotoToEvent: AddPhotoToEventUseCase,
     val getCommentsForGivenPhoto: GetCommentsForGivenPhotoUseCase,
     val addCommentToPhoto: AddCommentToPhotoUseCase,
-    val deleteCommentFromPhoto: DeleteCommentFromPhotoUseCase
+    val deleteCommentFromPhoto: DeleteCommentFromPhotoUseCase,
+    val getPDFForEvent: GetPDFForEventUseCase
 )
 
