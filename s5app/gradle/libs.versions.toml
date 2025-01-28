@@ -14,6 +14,7 @@ retrofit = "2.9.0"
 runtimeLivedata = "1.7.6"
 dagger = "2.49"
 hilt-compose = "1.2.0"
+datastore = "1.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -38,6 +39,8 @@ androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtim
 dagger-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "dagger" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "dagger" }
 hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-compose" }
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
