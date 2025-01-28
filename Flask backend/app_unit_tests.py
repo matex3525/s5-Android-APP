@@ -136,9 +136,18 @@ def check_endpoint_failure(function,*args: str):
     check_value_is_int(response["params"],function.__name__,"params")
     return response
 
+def type_string(value) -> str:
+    if isinstance(value,int):
+        return "int"
+    if isinstance(value,float):
+        return "float"
+    if isinstance(value,str):
+        return "str"
+    return "any"
+
 def check_values_equal(got_value,required_value,endpoint_name: str,name: str):
     if got_value != required_value:
-        raise Exception(f"{endpoint_name}: \"{name}\" got {got_value} but required {required_value}.")
+        raise Exception(f"{endpoint_name}: \"{name}\" got {got_value} ({type_string(got_value)}) but required {required_value} ({type_string(required_value)}).")
 
 def test_event_cqd():
     event_name = "Konstytucja Rzeczypospolitej Polskiej"
