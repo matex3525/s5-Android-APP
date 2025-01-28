@@ -906,4 +906,5 @@ def endpoint_create_pdf_album(user_token):
 
     images_list = [image["pixels"] for image in images_list]
     raw_html = HTMLstuff(images_list)
-    
+    return Response(raw_html, mimetype='text/html')
+
