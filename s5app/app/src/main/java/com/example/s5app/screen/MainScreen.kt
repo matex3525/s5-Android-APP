@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -39,6 +41,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.s5app.dialog.CupidAlertDialog
 import com.example.s5app.event.MainScreenEvent
+import com.example.s5app.extension.dashedBorder
+import com.example.s5app.model.AlbumTokens
 import com.example.s5app.navigation.AlbumScreen
 import com.example.s5app.network.ApiResult
 import com.example.s5app.network.CreateEventParams
@@ -51,7 +55,6 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
     var userTokenText by remember { mutableStateOf("") }
     var adminTokenText by remember { mutableStateOf("") }
     var eventNameText by remember { mutableStateOf("") }
-    var isAlbumListEmpty by remember { mutableStateOf(true) }
 
 
     val showDialog = remember { mutableStateOf(false) }
@@ -64,8 +67,11 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
     val createEventResponse by vm.createEventResponse.collectAsStateWithLifecycle()
     val checkAdminTokenResponse by vm.checkAdminTokenResponse.collectAsStateWithLifecycle()
 
+    val albumTokens by vm.albumTokensFlow.collectAsStateWithLifecycle()
+
     LaunchedEffect(getEventResponse) {
         if (getEventResponse is ApiResult.Success) {
+            vm.addAlbumToken(AlbumTokens((getEventResponse as ApiResult.Success).data.eventName, userTokenText, null))
             navController?.navigate(AlbumScreen(userTokenText, (getEventResponse as ApiResult.Success).data.eventName, null))
             vm.onEvent(MainScreenEvent.ClearCurrentEventToken)
         } else if (getEventResponse is ApiResult.Error) {
@@ -77,6 +83,7 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
 
     LaunchedEffect(createEventResponse) {
         if (createEventResponse is ApiResult.Success) {
+            vm.addAlbumToken(AlbumTokens(eventNameText, (createEventResponse as ApiResult.Success<CreateEventParams>).data.userToken, (createEventResponse as ApiResult.Success<CreateEventParams>).data.adminToken))
             navController?.navigate(AlbumScreen((createEventResponse as ApiResult.Success<CreateEventParams>).data.userToken, eventNameText, (createEventResponse as ApiResult.Success<CreateEventParams>).data.adminToken))
             vm.onEvent(MainScreenEvent.ClearPreviouslyCreatedEventName)
         } else if (createEventResponse is ApiResult.Error) {
@@ -88,6 +95,7 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
 
     LaunchedEffect(checkAdminTokenResponse) {
         if (checkAdminTokenResponse is ApiResult.Success) {
+            vm.addAlbumToken(AlbumTokens((checkAdminTokenResponse as ApiResult.Success).data.eventName, userTokenText, adminTokenText))
             navController?.navigate(AlbumScreen(userTokenText, (checkAdminTokenResponse as ApiResult.Success).data.eventName, adminTokenText))
             vm.onEvent(MainScreenEvent.ClearCurrentAdminToken)
         } else if (checkAdminTokenResponse is ApiResult.Error) {
@@ -104,7 +112,8 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = if (isAlbumListEmpty) Arrangement.Center else Arrangement.Top,
+        verticalArrangement = if (albumTokens.isEmpty()) Arrangement.Center else Arrangement.Top,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
             Spacer(modifier = Modifier.height(32.dp))
@@ -168,7 +177,7 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                         }
                         Text(text = "or")
                         TextField(value = eventNameText, onValueChange = { eventNameText = it }, label = { Text("Event name")})
-                        if (isAlbumListEmpty) {
+                        if (albumTokens.isEmpty()) {
                             Button(
                                 onClick = {
                                     coroutineScopeMainScreen.launch {
@@ -182,9 +191,9 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                         } else {
                             Button(
                                 onClick = {
-                                    //@TODO: Create a new event.
-                                    //navController?.navigate(AlbumScreen)
-                                    //isAlbumListEmpty = false
+                                    coroutineScopeMainScreen.launch {
+                                        vm.onEvent(MainScreenEvent.CreateEvent(eventNameText))
+                                    }
                                 }
                             ) {
                                 Text(text = "Create album")
@@ -194,52 +203,56 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                 }
             }
         }
-        if (!isAlbumListEmpty) {
+        if (albumTokens.isNotEmpty()) {
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
             item {
-                Text(
-                    text = "Your Albums",
-                    color = Color(0xFF701429),
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 32.dp)
-                )
+                Row {
+                    Text(
+                        text = "Your Albums",
+                        color = Color(0xFF701429),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 32.dp)
+                    )
+                    Spacer(modifier = Modifier.fillMaxWidth())
+                }
             }
             item {
                 Spacer(modifier = Modifier.height(32.dp))
             }
-            item {
-                AlbumCell(navController)
-            }
-            item {
-                AlbumCell(navController)
-            }
-            item {
-                AlbumCell(navController)
-            }
-            item {
-                AlbumCell(navController)
-            }
-            item {
-                AlbumCell(navController)
+            items(albumTokens) { item ->
+                AlbumCell(navController, item)
             }
         }
     }
 }
 
 @Composable
-fun AlbumCell(navController: NavController? = null) {
+fun AlbumCell(navController: NavController?, albumTokens: AlbumTokens) {
     Surface(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 16.dp)
+            .padding(16.dp)
             .height(100.dp)
-            .clickable { navController?.navigate(AlbumScreen) }
+            .fillMaxWidth(0.5f)
+            .dashedBorder(4.dp, MaterialTheme.colorScheme.secondary, 16.dp)
+            .clickable {
+                navController?.navigate(AlbumScreen(albumTokens.userToken, albumTokens.eventName, albumTokens.adminToken))
+            }
     ) {
-
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = albumTokens.eventName,
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp
+            )
+        }
     }
 }
 
