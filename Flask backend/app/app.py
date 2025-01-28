@@ -896,7 +896,7 @@ img:last-child:nth-child(5) {
     return template
 
 @app.get("/v0/event/<user_token>/HTML")
-def endpoint_create_pdf_album(user_token):
+def endpoint_create_html_album(user_token):
     if not does_event_exist(user_token):
         return error(ErrorCode.IncorrectUserToken)
 
