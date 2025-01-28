@@ -148,14 +148,24 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                                 TextField(
                                     modifier = Modifier.fillMaxWidth(0.5f),
                                     value = userTokenText,
-                                    onValueChange = { userTokenText = it },
+                                    onValueChange = {
+                                        if (it.length <= 50 && !it.contains("\n")) {
+                                            userTokenText = it
+                                        }
+                                    },
+                                    maxLines = 1,
                                     label = { Text("User token") }
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextField(
                                     modifier = Modifier.fillMaxWidth(0.5f),
                                     value = adminTokenText,
-                                    onValueChange = { adminTokenText = it },
+                                    onValueChange = {
+                                        if (it.length <= 6 && !it.contains("\n")) {
+                                            adminTokenText = it
+                                        }
+                                    },
+                                    maxLines = 1,
                                     label = { Text("Admin token") }
                                 )
                             }
@@ -176,7 +186,15 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                             }
                         }
                         Text(text = "or")
-                        TextField(value = eventNameText, onValueChange = { eventNameText = it }, label = { Text("Event name")})
+                        TextField(
+                            value = eventNameText,
+                            onValueChange = {
+                                if (it.length <= 50 && !it.contains("\n")) {
+                                    eventNameText = it
+                                }
+                            },
+                            label = { Text("Event name")},
+                            maxLines = 1)
                         if (albumTokens.isEmpty()) {
                             Button(
                                 onClick = {
