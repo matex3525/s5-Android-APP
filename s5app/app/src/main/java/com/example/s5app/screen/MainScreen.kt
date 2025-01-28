@@ -198,6 +198,12 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                         if (albumTokens.isEmpty()) {
                             Button(
                                 onClick = {
+                                    if (eventNameText.isEmpty()) {
+                                        dialogTitle.value = "Error"
+                                        dialogText.value = "Event name cannot be empty."
+                                        showDialog.value = true
+                                        return@Button
+                                    }
                                     coroutineScopeMainScreen.launch {
                                         vm.onEvent(MainScreenEvent.CreateEvent(eventNameText))
                                     }
@@ -209,6 +215,12 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                         } else {
                             Button(
                                 onClick = {
+                                    if (eventNameText.isEmpty()) {
+                                        dialogTitle.value = "Error"
+                                        dialogText.value = "Event name cannot be empty."
+                                        showDialog.value = true
+                                        return@Button
+                                    }
                                     coroutineScopeMainScreen.launch {
                                         vm.onEvent(MainScreenEvent.CreateEvent(eventNameText))
                                     }
