@@ -735,8 +735,9 @@ def PDF_from_pillow(images_PIL, album_title):
     c.showPage()
 
     for i, image in enumerate(images_PIL):
-        c.drawImage(image, inch, inch, width=page_width - 2 * inch, height=page_height - 2 * inch,
-                    preserveAspectRatio=True, anchor='c')
+        # c.drawImage(image=image, x=inch, y=inch, width=page_width - 2 * inch, height=page_height - 2 * inch,
+        #             preserveAspectRatio=True)
+        c.drawInlineImage(image=image, x=inch, y=inch, width=page_width - 2 * inch, height=page_height - 2 * inch)
         draw_page_number(c, i + 1)
         c.showPage()
 
@@ -763,7 +764,7 @@ def endpoint_create_docx_album(user_token):
         docx_buffer,
         mimetype='application/docx',
         headers={
-            'Content-Disposition': f'attachment; filename="{album_title}.pdf"'
+            'Content-Disposition': f'attachment; filename="{album_title}.docx'
         }
     )
 
@@ -799,4 +800,5 @@ def DOCX_from_pillow(images_PIL, title):
         add_image(doc, image_PIL)
 
     doc.save(docx_buffer)
+    docx_buffer.seek(0)
     return docx_buffer
