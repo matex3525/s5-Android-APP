@@ -735,3 +735,6 @@ def PDF_from_pillow(images_PIL, album_title):
     c.save()
     pdf_buffer.seek(0)
     return pdf_buffer
+
+
+

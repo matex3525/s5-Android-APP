@@ -13,19 +13,12 @@ object BitmapUtil {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream)
         val byteArray = byteArrayOutputStream.toByteArray()
         val base64 = Base64.encodeToString(byteArray, Base64.DEFAULT)
-        //println(base64)
         return base64
     }
 
     @OptIn(ExperimentalEncodingApi::class)
     fun base64ARGBToBitmap(base64Pixels: String): Bitmap {
-        //println(base64Pixels)
-        try {
-
         val decodedString = Base64.decode(base64Pixels, Base64.DEFAULT)
         return BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
-        } catch (e: Exception) {
-            return Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-        }
     }
 }
