@@ -66,19 +66,20 @@ def check_endpoint(function,*args: str):
     elif function.__name__ == "endpoint_get_album_by_id":
         if not isinstance(params,list):
             raise Exception(f"{function.__name__}: \"params\" isn't a list.")
-        if len(params) != 1:
-            raise Exception(f"{function.__name__}: len(\"params\") != 1.")
-        param = params[0]
-        if "album_id" not in param:
-            raise Exception(f"{function.__name__}: \"params\" doesn't have \"album_id\".")
-        if "name" not in param:
-            raise Exception(f"{function.__name__}: \"params\" doesn't have \"name\".")
-        if "image_count" not in param:
-            raise Exception(f"{function.__name__}: \"params\" doesn't have \"image_count\".")
-        check_value_is_int(param["image_count"],function.__name__,"image_count")
-        if "time" not in param:
-            raise Exception(f"{function.__name__}: \"params\" doesn't have \"time\".")
-        check_value_is_int(param["time"],function.__name__,"time")
+        if len(params) == 1:
+            param = params[0]
+            if "album_id" not in param:
+                raise Exception(f"{function.__name__}: \"params\" doesn't have \"album_id\".")
+            if "name" not in param:
+                raise Exception(f"{function.__name__}: \"params\" doesn't have \"name\".")
+            if "image_count" not in param:
+                raise Exception(f"{function.__name__}: \"params\" doesn't have \"image_count\".")
+            check_value_is_int(param["image_count"],function.__name__,"image_count")
+            if "time" not in param:
+                raise Exception(f"{function.__name__}: \"params\" doesn't have \"time\".")
+            check_value_is_int(param["time"],function.__name__,"time")
+        elif len(params) != 0:
+            raise Exception(f"{function.__name__}: len(\"params\") != 0 and len(\"params\") != 1.")
     elif function.__name__ == "endpoint_get_album_image_count":
         check_value_is_int(params,function.__name__,"")
     elif function.__name__ == "endpoint_get_album_image_by_index":
@@ -99,7 +100,41 @@ def check_endpoint(function,*args: str):
             raise Exception(f"{function.__name__}: \"params\" doesn't have \"description\".")
         if "pixels" not in param:
             raise Exception(f"{function.__name__}: \"params\" doesn't have \"pixels\".")
+    elif function.__name__ == "endpoint_add_comment":
+        if "comment_id" not in params:
+            raise Exception(f"{function.__name__}: \"params\" doesn't have \"comment_id\".")
+        if "time" not in params:
+            raise Exception(f"{function.__name__}: \"params\" doesn't have \"time\".")
+        check_value_is_int(params["time"],function.__name__,"time")
+    elif function.__name__ == "endpoint_delete_comment_by_id":
+        pass
+    elif function.__name__ == "endpoint_get_image_comment_by_index":
+        if not isinstance(params,list):
+            raise Exception(f"{function.__name__}: \"params\" isn't a list.")
+        if len(params) != 1:
+            raise Exception(f"{function.__name__}: len(\"params\") != 1.")
+        param = params[0]
+        if "comment_id" not in param:
+            raise Exception(f"{function.__name__}: \"params\" doesn't have \"comment_id\".")
+        if "text" not in param:
+            raise Exception(f"{function.__name__}: \"params\" doesn't have \"text\".")
+        if "time" not in param:
+            raise Exception(f"{function.__name__}: \"params\" doesn't have \"time\".")
+        check_value_is_int(param["time"],function.__name__,"time")
+    else:
+        raise Exception(f"{function.__name__}: Unsupported endpoint.")
     return params
+
+def check_endpoint_failure(function,*args: str):
+    response = function(function.__name__,*args)
+    if "success" not in response:
+        raise Exception(f"{function.__name__}: \"response\" doesn't have \"success\".")
+    if "params" not in response:
+        raise Exception(f"{function.__name__}: \"response\" doesn't have \"params\".")
+    if(int(response["success"]) == 1):
+        raise Exception(f"{function.__name__}: \"success\" was 1 expected 0.")
+    check_value_is_int(response["params"],function.__name__,"params")
+    return response
 
 def check_values_equal(got_value,required_value,endpoint_name: str,name: str):
     if got_value != required_value:
@@ -149,6 +184,30 @@ def test_images():
         check_values_equal(response_params[0]["pixels"],pixel_string,"endpoint_get_image_by_index","pixels")
 
     check_endpoint(app_tests.endpoint_delete_image,user_token,admin_token,image_id)
+
+    response_params = check_endpoint(app_tests.endpoint_get_image_count,user_token)
+    check_values_equal(int(response_params),0,"endpoint_get_image_count","")
+
+    check_endpoint(app_tests.endpoint_delete_event,user_token,admin_token)
+
+def test_multiple_images():
+    event_name = "test_multiple_images"
+    response_params = check_endpoint(app_tests.endpoint_create_event,event_name)
+    user_token = response_params["user_token"]
+    admin_token = response_params["admin_token"]
+
+    image_count = 3
+    image_ids = []
+    for _ in range(image_count):
+        file_path = "./test_image.jpg"
+        response_params = check_endpoint(app_tests.endpoint_add_image,user_token,file_path)
+        image_ids.append(response_params["image_id"])
+
+    response_params = check_endpoint(app_tests.endpoint_get_image_count,user_token)
+    check_values_equal(int(response_params),image_count,"endpoint_get_image_count","")
+
+    for index in range(image_count):
+        check_endpoint(app_tests.endpoint_delete_image,user_token,admin_token,image_ids[index])
 
     response_params = check_endpoint(app_tests.endpoint_get_image_count,user_token)
     check_values_equal(int(response_params),0,"endpoint_get_image_count","")
@@ -211,23 +270,86 @@ def test_album_images():
 
     check_endpoint(app_tests.endpoint_delete_event,user_token,admin_token)
 
-def try_test(test,success_counter,total_counter):
+def test_image_comments():
+    event_name = "Tests2"
+    response_params = check_endpoint(app_tests.endpoint_create_event,event_name)
+    user_token = response_params["user_token"]
+    admin_token = response_params["admin_token"]
+
+    file_path = "./test_image.jpg"
+    response_params = check_endpoint(app_tests.endpoint_add_image,user_token,file_path)
+    image_id = response_params["image_id"]
+
+    comment_text = "Odpowiedzialności karnej podlega ten tylko, kto popełnił czyn zabroniony pod groźbą kary przez ustawę obowiązującą w momencie popełnienia tego czynu."
+    response_params = check_endpoint(app_tests.endpoint_add_comment,user_token,image_id,comment_text)
+    comment_id = response_params["comment_id"]
+    comment_time = response_params["time"]
+
+    response_params = check_endpoint(app_tests.endpoint_get_image_comment_by_index,user_token,image_id,0)
+    check_values_equal(response_params[0]["comment_id"],comment_id,"endpoint_get_image_comment_by_index","comment_id")
+    check_values_equal(response_params[0]["text"],comment_text,"endpoint_get_image_comment_by_index","text")
+    check_values_equal(int(response_params[0]["time"]),comment_time,"endpoint_get_image_comment_by_index","time")
+
+    check_endpoint(app_tests.endpoint_delete_comment_by_id,user_token,admin_token,image_id,comment_id)
+    check_endpoint(app_tests.endpoint_delete_image,user_token,admin_token,image_id)
+    check_endpoint(app_tests.endpoint_delete_event,user_token,admin_token)
+
+def test_event_failure():
+    check_endpoint_failure(app_tests.endpoint_get_event_data,"invalid_user_token")
+
+def test_event_failure2():
+    event_name = "test_event_failure2"
+    response_params = check_endpoint(app_tests.endpoint_create_event,event_name)
+    user_token = response_params["user_token"]
+    admin_token = response_params["admin_token"]
+    check_endpoint(app_tests.endpoint_delete_event,user_token,admin_token)
+    check_endpoint_failure(app_tests.endpoint_get_event_data,user_token)
+
+def test_album_failure():
+    check_endpoint_failure(app_tests.endpoint_get_album_by_id,"invalid_user_token","69")
+
+def test_album_failure2():
+    event_name = "test_event_failure2"
+    response_params = check_endpoint(app_tests.endpoint_create_event,event_name)
+    user_token = response_params["user_token"]
+    admin_token = response_params["admin_token"]
+
+    album_name = "MyAlbum69"
+    response_params = check_endpoint(app_tests.endpoint_create_album,user_token,album_name)
+    alnum_id = response_params["album_id"]
+    check_endpoint(app_tests.endpoint_delete_album_by_id,user_token,admin_token,alnum_id)
+
+    response_params = check_endpoint(app_tests.endpoint_get_album_by_id,user_token,alnum_id)
+    check_values_equal(len(response_params),0,"endpoint_get_album_by_id","")
+
+    check_endpoint(app_tests.endpoint_delete_event,user_token,admin_token)
+
+test_success_count = 0
+test_total_run_count = 0
+
+def try_test(test):
+    global test_success_count
+    global test_total_run_count
     name = test.__name__.upper()
     try:
         print(f"-------- {name} --------")
         test()
-        success_counter[0] += 1
+        test_success_count += 1
         print(f"-------- {name} SUCCEDED --------")
     except Exception as error:
         print(f"-------- {name} FAILED --------\n{error}")
     finally:
-        total_counter[0] += 1
+        test_total_run_count += 1
 
 if __name__ == "__main__":
-    successes = [0]
-    total = [0]
-    try_test(test_event_cqd,successes,total)
-    try_test(test_images,successes,total)
-    try_test(test_albums_cqd,successes,total)
-    try_test(test_album_images,successes,total)
-    print(f"-------- TESTS SUMMARY ({successes[0]}/{total[0]} = {int((successes[0] / total[0]) * 10000) / 100}%) --------")
+    try_test(test_event_cqd)
+    try_test(test_images)
+    try_test(test_multiple_images)
+    try_test(test_albums_cqd)
+    try_test(test_album_images)
+    try_test(test_image_comments)
+    try_test(test_event_failure)
+    try_test(test_event_failure2)
+    try_test(test_album_failure)
+    try_test(test_album_failure2)
+    print(f"-------- TESTS SUMMARY ({test_success_count}/{test_total_run_count} = {int((test_success_count / test_total_run_count) * 10000) / 100}%) --------")
