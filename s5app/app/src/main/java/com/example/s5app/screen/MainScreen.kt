@@ -198,6 +198,7 @@ fun MainScreen(vm: MainScreenViewModel = hiltViewModel(), navController: NavCont
                             ) {
                                 Text(text = "Create album")
                             }
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
                     }
                 }
