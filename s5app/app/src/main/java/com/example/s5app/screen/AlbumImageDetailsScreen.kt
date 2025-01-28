@@ -4,16 +4,19 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -35,6 +38,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.s5app.event.AlbumImageDetailsScreenEvent
 import com.example.s5app.ui.theme.S5appTheme
+import com.example.s5app.util.DateUtil
 import com.example.s5app.viewmodel.AlbumImageDetailsScreenViewModel
 import com.example.s5app.viewmodel.AlbumScreenViewModel
 import java.util.Date
@@ -80,9 +84,6 @@ fun AlbumImageDetailsScreen(
                 Spacer(modifier = Modifier.height(48.dp))
             }
             item {
-                Text("Comments")
-            }
-            item {
                 Column (
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -110,15 +111,22 @@ fun AlbumImageDetailsScreen(
             item {
                 Spacer(modifier = Modifier.height(48.dp))
             }
+            item {
+                Row {
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Comment count: ${comments.size}")
+                    Spacer(modifier = Modifier.fillMaxWidth())
+                }
+            }
             items(items = comments) { comment ->
-                AlbumImageDetailsCommentCell(comment.text, comment.commentId, vm)
+                AlbumImageDetailsCommentCell(comment.text, comment.time, comment.commentId, vm)
             }
         }
     }
 }
 
 @Composable
-fun AlbumImageDetailsCommentCell(comment: String, commentId: String, vm: AlbumImageDetailsScreenViewModel) {
+fun AlbumImageDetailsCommentCell(comment: String, time: Long, commentId: String, vm: AlbumImageDetailsScreenViewModel) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -129,7 +137,20 @@ fun AlbumImageDetailsCommentCell(comment: String, commentId: String, vm: AlbumIm
             },
         shape = RectangleShape
     ) {
-        Text(comment, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp))
+        Column {
+            Text(
+                DateUtil.formatMillisecondsToDateTime(time),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.labelSmall
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                comment,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+
     }
 }
 
