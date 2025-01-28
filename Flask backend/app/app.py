@@ -692,7 +692,12 @@ def endpoint_get_album_image_thumb_by_index(user_token: str, album_id: str, imag
 
 @app.get("/v0/event/<user_token>/PDF")
 def endpoint_create_pdf_album(user_token):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+
     images_list = get_images_by_ids(user_token=user_token, start_image_id="-", count=None, is_thumb=False)
+    if len(images_list) == 0:
+        return error(ErrorCode.InternalError)
 
     album_title = "wedding_album"
     images_PIL = images_b64_to_pillow([(image["pixels"], image["width"], image["height"]) for image in images_list])
