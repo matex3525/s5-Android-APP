@@ -184,7 +184,7 @@ fun AlbumScreen(navController: NavController? = null, userToken: String, eventNa
 fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = null, userToken: String, adminToken: String? = null) {
     val context = LocalContext.current
 
-    val bitmap = base64ARGBToBitmap(albumImage.pixels, albumImage.width, albumImage.height)
+    val bitmap = base64ARGBToBitmap(albumImage.pixels)
     val imageBitmap: ImageBitmap = bitmap.asImageBitmap()
 
     Surface(
