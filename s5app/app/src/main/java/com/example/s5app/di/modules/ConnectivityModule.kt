@@ -17,6 +17,7 @@ import com.example.s5app.use_case.DeleteCommentFromPhotoUseCase
 import com.example.s5app.use_case.GetEventUseCase
 import com.example.s5app.use_case.EventUseCases
 import com.example.s5app.use_case.GetCommentsForGivenPhotoUseCase
+import com.example.s5app.use_case.GetPDFForEventUseCase
 import com.example.s5app.use_case.GetPhotosForGivenEventUseCase
 import dagger.hilt.android.qualifiers.ApplicationContext
 import retrofit2.Retrofit
@@ -69,7 +70,8 @@ object ConnectivityModule {
             addPhotoToEvent = AddPhotoToEventUseCase(repository),
             getCommentsForGivenPhoto = GetCommentsForGivenPhotoUseCase(repository),
             addCommentToPhoto = AddCommentToPhotoUseCase(repository),
-            deleteCommentFromPhoto = DeleteCommentFromPhotoUseCase(repository)
+            deleteCommentFromPhoto = DeleteCommentFromPhotoUseCase(repository),
+            getPDFForEvent = GetPDFForEventUseCase(repository)
         )
     }
 }

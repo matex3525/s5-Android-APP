@@ -298,4 +298,8 @@ class CupidApiRepositoryImpl(
             Log.e("CupidApi", "Unexpected failure: ${e.message}")
         }
     }
+
+    override suspend fun getPDFForEvent(userToken: String): ByteArray {
+        return api.getPDFForEvent(userToken)
+    }
 }

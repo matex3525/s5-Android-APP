@@ -13,6 +13,7 @@ import com.example.s5app.event.AlbumScreenEvent
 import com.example.s5app.model.AlbumImage
 import com.example.s5app.network.AddPhotoToEventRequest
 import com.example.s5app.network.ApiResult
+import com.example.s5app.network.GetEventParams
 import com.example.s5app.use_case.EventUseCases
 import com.example.s5app.util.BitmapUtil.bitmapToBase64ARGB
 import dagger.assisted.Assisted
@@ -20,6 +21,8 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -33,6 +36,9 @@ class AlbumScreenViewModel @AssistedInject constructor(
     interface AlbumScreenViewModelFactory {
         fun create(userToken: String): AlbumScreenViewModel
     }
+
+    private val _getPDFResponse = MutableStateFlow<ByteArray?>(null)
+    val getPDFResponse: StateFlow<ByteArray?> = _getPDFResponse
 
     private val _images: SnapshotStateList<AlbumImage> = mutableStateListOf()
     val images: State<List<AlbumImage>> = mutableStateOf(_images)
@@ -111,6 +117,11 @@ class AlbumScreenViewModel @AssistedInject constructor(
                             _images.add(AlbumImage(result.data.imageId, imageData.width, imageData.height, imageData.description, imageData.pixels))
                         }
                     }
+                }
+            }
+            is AlbumScreenEvent.GetPDFFileForEvent -> {
+                viewModelScope.launch {
+                    _getPDFResponse.value = eventUseCases.getPDFForEvent(userToken)
                 }
             }
         }

@@ -24,7 +24,7 @@ fun Bitmap.toUri(context: Context): Uri {
     } catch (e: IOException) {
         e.printStackTrace()
     }
-    return FileProvider.getUriForFile(context, "com.example.s5app.fileprovider", file)
+    return FileProvider.getUriForFile(context, "com.example.s5app.provider", file)
 }
 
 // Function to convert Uri back to Bitmap
