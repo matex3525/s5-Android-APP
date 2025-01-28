@@ -20,6 +20,8 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -43,6 +45,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,6 +61,8 @@ import com.example.s5app.network.GetGivenEventPhotosParams
 import com.example.s5app.ui.theme.S5appTheme
 import com.example.s5app.util.BitmapUtil.base64ARGBToBitmap
 import com.example.s5app.viewmodel.AlbumScreenViewModel
+import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Base64
 
 
@@ -196,7 +201,14 @@ fun AlbumImageGridCell(albumImage: AlbumImage, navController: NavController? = n
                 val bitmapUri = imageBitmap
                     .asAndroidBitmap()
                     .toUri(context)
-                navController?.navigate(AlbumImageDetailsScreen(bitmapUri.toString(), userToken, albumImage.imageId, adminToken))
+                navController?.navigate(
+                    AlbumImageDetailsScreen(
+                        bitmapUri.toString(),
+                        userToken,
+                        albumImage.imageId,
+                        adminToken
+                    )
+                )
             }
     ) {
         // Your content here
@@ -226,14 +238,18 @@ fun AddImageGridCell(vm: AlbumScreenViewModel, userToken: String) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val bitmap = result.data?.extras?.get("data") as Bitmap
-            imageBitmap = bitmap
-            vm.onEvent(AlbumScreenEvent.AddPhotoToEvent(userToken, bitmap.asImageBitmap()))
+    var imageUri by remember { mutableStateOf(Uri.EMPTY) }
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        if (!success) {
+            return@rememberLauncherForActivityResult
         }
+        val source = ImageDecoder.createSource(context.contentResolver,imageUri)
+        val decodedListener = ImageDecoder.OnHeaderDecodedListener { decoder, _, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            decoder.isMutableRequired = true
+        }
+        val bitmap = ImageDecoder.decodeBitmap(source,decodedListener).asImageBitmap()
+        vm.onEvent(AlbumScreenEvent.AddPhotoToEvent(userToken, bitmap))
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -272,8 +288,10 @@ fun AddImageGridCell(vm: AlbumScreenViewModel, userToken: String) {
         DropdownMenuItem(
             onClick = {
                 expanded = false
-                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                cameraLauncher.launch(cameraIntent)
+                val imageFile = File.createTempFile("PNG",".png",context.cacheDir)
+                imageFile.deleteOnExit()
+                imageUri = FileProvider.getUriForFile(context,context.packageName + ".provider",imageFile)
+                cameraLauncher.launch(imageUri)
             },
             text = {
                 Text("Camera")
