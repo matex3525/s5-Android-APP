@@ -742,7 +742,13 @@ def PDF_from_pillow(images_PIL, album_title):
 
 @app.get("/v0/event/<user_token>/DOCX")
 def endpoint_create_docx_album(user_token):
+    if not does_event_exist(user_token):
+        return error(ErrorCode.IncorrectUserToken)
+
     images_list = get_images_by_ids(user_token=user_token, start_image_id="-", count=None, is_thumb=False)
+    if len(images_list) == 0:
+        return error(ErrorCode.InternalError)
+
 
     album_title = "Wedding album"
     images_PIL = images_b64_to_pillow([(image["pixels"], image["width"], image["height"]) for image in images_list])
