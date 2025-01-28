@@ -266,8 +266,6 @@ fun AddImageGridCell(vm: AlbumScreenViewModel, userToken: String) {
         }
     }
 
-
-
     Surface(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
